@@ -1,0 +1,236 @@
+# ROL
+Actúa como un equipo multidisciplinario compuesto por:
+- Un Arquitecto de Soluciones de Ciberseguridad (10+ años en pasarelas de correo, endpoint y entornos air-gapped).
+- Un Ingeniero de I+D+i especializado en proyectos financiables (CDTI, Horizonte Europa, Fondos Next Generation, ENISA).
+- Un Product Manager con experiencia en gobernanza de seguridad para CISOs y cumplimiento normativo (ENS, ISO 27001, NIS2, Common Criteria).
+- Un Responsable de Licenciamiento y Cumplimiento Legal de Software (GPL, Apache 2.0, licencias propietarias, exportación).
+- Un Redactor Técnico capaz de producir documentación ejecutiva, técnica, normativa y auditable.
+
+Trabajan de forma coordinada. Cuando haya conflicto entre perspectivas, prevalece el cumplimiento normativo (SECURITY-INDICATORS.md y PROMPT_INTEGRACION_LICENCIA.md) sobre cualquier otra consideración.
+
+# CONTEXTO DEL PROYECTO
+Estoy diseñando un proyecto de I+D+i llamado "Omni-CleanerMail".
+
+Omni-CleanerMail es una plataforma empresarial de purificación, protección y reporte de correo electrónico que combina:
+
+1. **Capa de pasarela de correo basada en Kaspersky Secure Mail Gateway (KSMG)** — antivirus, antispam, antiphishing, filtrado de contenido, SPF/DKIM/DMARC.
+2. **Capa de protección local sin dependencia de Internet** — motores de análisis on-premise/air-gapped:
+   - Análisis heurístico y por firmas locales (ClamAV, reglas YARA, análisis estático de adjuntos).
+   - Sandboxing local de adjuntos y enlaces (Cuckoo/CAPE autoalojado).
+   - Verificación local de reputación mediante listas blancas/negras internas.
+   - Análisis de metadatos, macros de Office (OOXML), PDFs maliciosos y scripts embebidos.
+   - Motor NLP/ML local (ONNX/TensorFlow Lite, sin llamadas a APIs externas) para clasificación de phishing y spam en español/portugués.
+   - Validación criptográfica local (PGP/S-MIME), firma de correo y sellado temporal sin CA externa.
+3. **Capa de agregación, dashboard y reportes** a nivel de empresa (CISO/CIO), departamento y usuario final (autoservicio de cuarentena).
+
+El proyecto se enmarca como I+D+i: debe tener componentes de innovación técnica demostrables, no solo integración de productos existentes.
+
+# DOCUMENTOS NORMATIVOS VINCULANTES
+El proyecto está regido por dos documentos normativos. Su cumplimiento es OBLIGATORIO y VERIFICABLE. El incumplimiento de cualquiera de ellos invalida la entrega.
+
+## Documento 1: `SECURITY-INDICATORS.md`
+[PEGAR AQUÍ EL CONTENIDO LITERAL SI ESTÁ DISPONIBLE]
+[Si no está disponible, el agente debe declararlo explícitamente al inicio de su respuesta y aplicar la plantilla de contingencia descrita en la RESTRICCIÓN A.]
+
+## Documento 2: `PROMPT_INTEGRACION_LICENCIA.md`
+[PEGAR AQUÍ EL CONTENIDO LITERAL SI ESTÁ DISPONIBLE]
+[Si no está disponible, el agente debe declararlo explícitamente al inicio de su respuesta y aplicar la plantilla de contingencia descrita en la RESTRICCIÓN B.]
+
+# RESTRICCIONES VINCULANTES (NO OPCIONALES)
+
+## RESTRICCIÓN A — Cumplimiento de `SECURITY-INDICATORS.md`
+
+La propuesta debe:
+1. **Mapear cada indicador de seguridad** definido en `SECURITY-INDICATORS.md` a un componente concreto de Omni-CleanerMail (capa, motor o módulo).
+2. **Declarar para cada indicador**: ID, nombre, definición, fórmula, unidad, frecuencia de cálculo, umbral objetivo, fuente de datos y responsable.
+3. **Garantizar que todos los indicadores son medibles offline** (sin dependencia de servicios cloud externos), salvo aquellos que el propio documento marque explícitamente como híbridos.
+4. **Incluir la sección 6 "Trazabilidad SECURITY-INDICATORS.md"** con tabla de doble entrada: indicador ↔ módulo ↔ evidencia auditable ↔ frecuencia ↔ umbral ↔ responsable.
+5. **No omitir ningún indicador** del documento. Si algún indicador no aplica, debe justificarse con la etiqueta `[NO APLICA — justificación]`.
+6. **Añadir matriz de cobertura** que muestre el porcentaje de indicadores cubiertos por la capa KSMG, por la capa offline y por la capa de agregación/reporting.
+7. **Definir el procedimiento de verificación continua** de cada indicador (test automatizado, auditoría, muestreo) y su frecuencia.
+8. **Incluir la matriz de trazabilidad bidireccional** (ver MEJORA 1): para cada módulo, qué indicadores cubre.
+9. **Definir al menos 10 casos de test automatizados** que verifiquen el cumplimiento de los indicadores (ver MEJORA 2).
+
+> **Plantilla de contingencia si el documento no está disponible:**
+> - Declarar la ausencia al inicio de la respuesta.
+> - Crear una plantilla de **20 indicadores candidatos** agrupados en: confidencialidad, integridad, disponibilidad, autenticidad, no repudio, trazabilidad, soberanía, latencia, tasa de detección, tasa de falsos positivos, cobertura de motores, latencia de sandbox, disponibilidad offline, integridad de cuarentena, inmutabilidad de logs, cumplimiento normativo, residencia de datos, aislamiento de red, autenticación de usuarios, control de acceso.
+> - Marcar cada uno como `[PENDIENTE DE VALIDAR CONTRA SECURITY-INDICATORS.md]`.
+
+## RESTRICCIÓN B — Cumplimiento de `PROMPT_INTEGRACION_LICENCIA.md`
+
+La propuesta debe:
+1. **Respetar íntegramente las reglas de integración de licencia** descritas en `PROMPT_INTEGRACION_LICENCIA.md` (activación, validación, renovación, offline mode, hardware binding, telemetría, revocación, exportación, etc.).
+2. **Incluir el módulo "License Integration Layer (LIL)"** dentro de la arquitectura (Capa 7), con:
+   - Gestión de claves de licencia (local, sin callback obligatorio a Internet).
+   - Modo de gracia y operación degradada cuando la licencia no puede validarse online.
+   - Vinculación a hardware/instancia (fingerprint) para entornos air-gapped.
+   - Registro auditable de eventos de licencia (activación, renovación, expiración, revocación).
+   - API interna para que los motores (KSMG, ClamAV, YARA, ML local, sandbox) consulten estado de licencia.
+3. **Explicar cómo convive la licencia de KSMG** con las licencias de los componentes offline (ClamAV GPL, YARA Apache 2.0, CAPE/Cuckoo, modelos ML propios, etc.), evitando incompatibilidades.
+4. **Incluir la sección 7 "Cumplimiento PROMPT_INTEGRACION_LICENCIA.md"** con checklist punto por punto.
+5. **Definir el flujo de licenciamiento** en tres escenarios: online, offline con período de gracia y offline permanente (air-gapped).
+6. **No proponer** ninguna integración que vulnere los términos de licencia de KSMG, ClamAV, YARA u otros componentes de terceros.
+7. **Incluir la sección 15 "Anexo Legal — Compatibilidad de Licencias"** (ver MEJORA 4).
+8. **Definir al menos 10 casos de test automatizados** que verifiquen el cumplimiento de las reglas de licencia (ver MEJORA 2).
+
+> **Plantilla de contingencia si el documento no está disponible:**
+> - Declarar la ausencia al inicio de la respuesta.
+> - Proponer plantilla de reglas de integración: activación, validación, renovación, offline, hardware binding, telemetría, revocación, exportación, auditoría, degradación.
+> - Marcar cada regla como `[PENDIENTE DE VALIDAR CONTRA PROMPT_INTEGRACION_LICENCIA.md]`.
+
+# MEJORAS OBLIGATORIAS INTEGRADAS
+
+## MEJORA 1 — Trazabilidad bidireccional
+Además de la tabla indicador → módulo, incluir la **matriz inversa**: para cada módulo de Omni-CleanerMail, qué indicadores de `SECURITY-INDICATORS.md` cubre y qué reglas de `PROMPT_INTEGRACION_LICENCIA.md` aplica. Formato: tabla con columnas Módulo, Indicadores cubiertos, Reglas de licencia aplicadas, Evidencia auditable.
+
+## MEJORA 2 — Pruebas de cumplimiento automatizadas
+Definir **10 casos de test automatizados** para `SECURITY-INDICATORS.md` y **10 para `PROMPT_INTEGRACION_LICENCIA.md`**. Cada caso debe incluir: ID, nombre, precondición, pasos, resultado esperado, criterio de aceptación, frecuencia de ejecución y herramienta sugerida (pytest, bats, Robot Framework, etc.). Incluir ejemplos de aserciones verificables.
+
+## MEJORA 3 — Versión air-gapped pura
+Añadir la **sección 16 "Anexo Air-Gapped Puro"** que adapte toda la propuesta a un escenario sin ningún acceso a Internet, incluyendo:
+- Licenciamiento sin callback (activación por archivo firmado, hardware binding, códigos de activación offline).
+- Actualizaciones de firmas y modelos por medios físicos (USB, sneakernet, mirror interno).
+- Sincronización AD/LDAP sin exposición externa.
+- Reportes y telemetría 100% locales, con exportación manual.
+- Consideraciones de cumplimiento export control (ITAR, EAR, EU Dual-Use).
+- Diferencias operativas respecto al modo híbrido.
+
+## MEJORA 4 — Anexo legal de compatibilidad de licencias
+Incluir la **sección 15 "Anexo Legal — Compatibilidad de Licencias"** con:
+- Análisis de compatibilidad entre KSMG (propietaria), ClamAV (GPLv2), YARA (Apache 2.0), CAPE/Cuckoo (varias), modelos ML propios, ONNX Runtime (MIT), TensorFlow Lite (Apache 2.0).
+- Obligaciones de distribución (copyleft, atribución, publicación de modificaciones).
+- Riesgos de contaminación de licencia en el binario final.
+- Estrategia de separación de procesos/servicios para evitar contagio GPL.
+- Obligaciones de exportación y sanciones internacionales.
+- Recomendaciones de auditoría legal previa al lanzamiento.
+
+# OBJETIVO DEL ENCARGO
+Genera una **propuesta completa de proyecto I+D+i** para Omni-CleanerMail, en **español**, con la siguiente estructura exacta:
+
+## 1. Resumen Ejecutivo (máx. 300 palabras)
+Problema, solución, innovación diferencial, mercado objetivo, inversión estimada, retorno esperado y **declaración explícita de cumplimiento de SECURITY-INDICATORS.md y PROMPT_INTEGRACION_LICENCIA.md**.
+
+## 2. Análisis del Problema y Oportunidad
+- Limitaciones de soluciones cloud-only (soberanía, dependencia de Internet, cumplimiento normativo).
+- Brecha entre "bloqueo en gateway" y "gobernanza y reporte a nivel de usuario/departamento".
+- Sectores objetivo: banca, sanidad, administración pública, defensa, industria crítica, legal.
+
+## 3. Arquitectura Técnica de Omni-CleanerMail
+Capas con diagrama ASCII:
+- Capa 1 — Ingesta y recepción (KSMG + fallback local).
+- Capa 2 — Análisis multi-motor (KSMG + motores offline: ClamAV, YARA, sandbox local, ML local, análisis de adjuntos).
+- Capa 3 — Correlación y scoring (fusión de veredictos, puntuación de riesgo).
+- Capa 4 — Purificación y cuarentena.
+- Capa 5 — Reporte y dashboard (empresa, departamento, usuario).
+- Capa 6 — Integraciones (AD/LDAP, SIEM CEF/syslog, ticketing, DLP).
+- Capa 7 — License Integration Layer (LIL) [obligatoria por PROMPT_INTEGRACION_LICENCIA.md].
+
+Justifica por qué el enfoque híbrido offline+gateway es superior en entornos con requisitos de soberanía.
+
+## 4. Componentes de I+D+i (novedad técnica)
+Al menos 7 componentes con TRL 3-7:
+- Motor de fusión de veredictos multi-motor con scoring ponderado.
+- Modelo ML local (sin Internet) para phishing en español/portugués.
+- Sandboxing determinista y reproducible para adjuntos en air-gapped.
+- Motor de atribución usuario/departamento vía AD sin exponer PII.
+- Sistema de reportes narrativos autogenerados para CISOs.
+- Mecanismo de purificación autoservicio con trazas de auditoría inmutables (hash-chain local).
+- Módulo de licenciamiento offline con hardware binding [obligatorio por PROMPT_INTEGRACION_LICENCIA.md].
+
+Para cada componente: objetivo, estado del arte, innovación, TRL actual y TRL esperado.
+
+## 5. Dashboard y Sistema de Métricas
+- Vista Empresa: postura de amenazas, mapa de calor por departamento, ranking de usuarios de riesgo, efectividad de reglas, tendencias.
+- Vista Departamento: scoring del departamento, usuarios de riesgo interno, salud del flujo.
+- Vista Usuario: bandeja de cuarentena personal, nivel de riesgo personal, recomendaciones.
+
+Define al menos 15 métricas organizadas en:
+- Resultado (tasa de bloqueo, Índice de Riesgo de Usuario, tiempo de respuesta, tasa de falsos positivos).
+- Proceso (autoliberación, apertura de reportes, cobertura departamental).
+- Offline (cobertura de motores locales, detección offline vs. gateway, latencia de sandbox).
+- Gobernanza (cumplimiento normativo, trazabilidad, soberanía).
+- Licenciamiento (estado de licencia, días de gracia restantes, cumplimiento PROMPT_INTEGRACION_LICENCIA.md).
+
+## 6. Trazabilidad SECURITY-INDICATORS.md [OBLIGATORIA]
+- Tabla directa: ID indicador ↔ módulo ↔ evidencia auditable ↔ frecuencia ↔ umbral ↔ responsable.
+- Matriz de cobertura (KSMG / offline / agregación).
+- Matriz de trazabilidad bidireccional (MEJORA 1).
+- Procedimiento de verificación continua.
+- Casos de test automatizados (MEJORA 2).
+
+## 7. Cumplimiento PROMPT_INTEGRACION_LICENCIA.md [OBLIGATORIA]
+- Checklist punto por punto.
+- Flujo de licenciamiento en tres escenarios (online, offline con gracia, air-gapped permanente).
+- Compatibilidad con licencias de terceros (KSMG, ClamAV GPL, YARA Apache 2.0, etc.).
+- Registro auditable de eventos de licencia.
+- Matriz de trazabilidad bidireccional de licencias (MEJORA 1).
+- Casos de test automatizados de licenciamiento (MEJORA 2).
+
+## 8. Plan de Implementación (18 meses)
+Fases con hitos, entregables, recursos y duración:
+- Fase 0: Requisitos y arquitectura (M1-M2).
+- Fase 1: Núcleo de ingesta y análisis multi-motor (M3-M6).
+- Fase 2: Motor de fusión, scoring y cuarentena (M6-M9).
+- Fase 3: Dashboard y reportes (M9-M12).
+- Fase 4: Capa offline avanzada + LIL (M12-M15).
+- Fase 5: Pilotos en 3 sectores regulados (M15-M18).
+
+## 9. Presupuesto Estimado y Financiación
+Desglose por: personal I+D, infraestructura, licencias, pilotos, certificaciones (Common Criteria, ENS, ISO 27001).
+Líneas de financiación: CDTI, Horizonte Europa, Next Generation, ENISA, fondos sectoriales.
+
+## 10. Riesgos y Mitigación
+Tabla: riesgo técnico, de mercado, regulatorio, de adopción y de licenciamiento. Probabilidad, impacto y mitigación.
+
+## 11. Resultados Esperados y KPI
+- Técnicos (TRL, latencia, precisión, cobertura de motores).
+- Negocio (clientes piloto, ARR, tiempo de despliegue).
+- Gobernanza (reducción de incidentes, mejora de scoring, cierre de brechas).
+- Cumplimiento (SECURITY-INDICATORS.md y PROMPT_INTEGRACION_LICENCIA.md).
+
+## 12. Diferenciación Competitiva
+Compara frente a Proofpoint, Mimecast, Microsoft Defender for Office 365, Barracuda, KSMG puro, IronPort/Cisco ESA. Destaca soberanía, modo offline y reporting a nivel de usuario.
+
+## 13. Checklist Final de Cumplimiento [OBLIGATORIA]
+Lista verificable con casillas:
+- [ ] Todos los indicadores de SECURITY-INDICATORS.md mapeados o justificados como [NO APLICA].
+- [ ] Todos los puntos de PROMPT_INTEGRACION_LICENCIA.md cubiertos.
+- [ ] LIL presente en la arquitectura.
+- [ ] Escenarios online/offline/air-gapped definidos.
+- [ ] Compatibilidad de licencias de terceros verificada.
+- [ ] Métricas de licenciamiento incluidas en el dashboard.
+- [ ] Trazabilidad auditable para cada indicador.
+- [ ] Trazabilidad bidireccional módulo ↔ indicador ↔ licencia.
+- [ ] 10 casos de test de SECURITY-INDICATORS.md definidos.
+- [ ] 10 casos de test de PROMPT_INTEGRACION_LICENCIA.md definidos.
+- [ ] Sin dependencias cloud obligatorias en la capa offline.
+- [ ] Anexo legal de compatibilidad de licencias incluido.
+- [ ] Anexo air-gapped puro incluido.
+- [ ] Preguntas abiertas identificadas.
+
+## 14. Preguntas Abiertas para el Equipo Fundador
+5-7 preguntas críticas, incluyendo al menos 2 sobre SECURITY-INDICATORS.md, 2 sobre PROMPT_INTEGRACION_LICENCIA.md y 1 sobre air-gapped puro.
+
+## 15. Anexo Legal — Compatibilidad de Licencias [MEJORA 4]
+Análisis completo de compatibilidad, obligaciones, riesgos de contaminación y estrategia de separación.
+
+## 16. Anexo Air-Gapped Puro [MEJORA 3]
+Adaptación completa de la propuesta a escenario sin Internet.
+
+# RESTRICCIONES Y ESTILO
+- Idioma: español técnico-profesional, claro y sin marketing vacío.
+- Tono: ejecutivo para secciones 1, 9, 11, 12; técnico para 3, 4, 5, 6, 7; normativo para 6, 7, 13; legal para 15; operativo para 16.
+- Formato: markdown con encabezados, tablas y diagramas ASCII donde aporte valor.
+- Extensión: 6.000–8.000 palabras (ampliada por secciones normativas, mejoras y anexos).
+- Justifica siempre por qué cada decisión es de I+D+i y no mera integración.
+- Cuando menciones KSMG, cita capacidades reales: eventos con remitente/destinatario/regla/acción/técnica de detección, publicación CEF a SIEM, integración AD, permisos de backup personal, dashboards con "Top 10 destinatarios".
+- Cuando menciones componentes offline, sé concreto: ClamAV, YARA, CAPE/Cuckoo autoalojado, ONNX/TFLite, análisis de macros OOXML, PDF parsing, SPF/DKIM/DMARC local, listas internas de reputación.
+- No inventes cifras de mercado sin marcarlas como "estimación interna a validar".
+- Si falta el contenido literal de SECURITY-INDICATORS.md o PROMPT_INTEGRACION_LICENCIA.md, decláralo al inicio y usa las plantillas indicadas con etiquetas [PENDIENTE DE VALIDAR].
+
+# FORMATO DE SALIDA
+Devuelve únicamente la propuesta en markdown, sin preámbulos ni explicaciones sobre cómo la generaste.
+Al final, añade:
+- **ANEXO A — Estado de cumplimiento**: semáforos (verde/amarillo/rojo) por documento normativo.
+- **ANEXO B — Índice de tablas y matrices**: listado de todas las tablas generadas con su propósito.
+- **ANEXO C — Glosario**: términos clave (LIL, air-gapped, hash-chain, hardware binding, TRL, CEF, ENS, etc.).

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+
+# Entorno / secretos
+.env
+
+# Datos de ejecucion (bases, backups, licencias locales)
+app/data/*.db
+app/data/*.db-wal
+app/data/*.db-shm
+app/data/*.bkp_*
+app/data/backups/
+app/data/license.json
+app/data/solicitud_omni_lic.json
+
+# Logs
+*.log
+
+# Sistema
+Thumbs.db
+Desktop.ini
+.DS_Store

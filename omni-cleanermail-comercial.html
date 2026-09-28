@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni-CleanerMail — Plataforma Empresarial de Purificación de Correo</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --accent2: #06b6d4;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e3a5f 50%, var(--accent) 100%);
+            color: white;
+            padding: 80px 40px;
+            text-align: center;
+        }
+        .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 16px; letter-spacing: -1px; }
+        .hero .subtitle { font-size: 1.25rem; opacity: 0.9; max-width: 700px; margin: 0 auto 24px; }
+        .hero .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 4px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        section { padding: 60px 0; }
+        h2 { font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: var(--primary); }
+        h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; color: var(--primary); }
+        .section-desc { color: var(--muted); font-size: 1.05rem; margin-bottom: 32px; max-width: 800px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .card-icon {
+            width: 48px; height: 48px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+        .icon-blue { background: #dbeafe; color: var(--accent); }
+        .icon-green { background: #d1fae5; color: var(--green); }
+        .icon-orange { background: #fef3c7; color: var(--orange); }
+        .icon-red { background: #fee2e2; color: var(--red); }
+        .icon-cyan { background: #cffafe; color: var(--accent2); }
+        .tech-tag {
+            display: inline-block;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin: 3px;
+            color: var(--text);
+        }
+        .tech-tag.highlight { background: var(--accent); color: white; border-color: var(--accent); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        th { background: var(--primary); color: white; padding: 14px 16px; text-align: left; font-weight: 600; font-size: 0.9rem; }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+        .price-tag {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        .price-period { color: var(--muted); font-size: 0.9rem; }
+        .pkg-card {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+        }
+        .pkg-card.featured { border-color: var(--accent); }
+        .pkg-card.featured::before {
+            content: 'RECOMENDADO';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .pkg-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+        .pkg-target { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+        .pkg-price { margin: 16px 0; }
+        .pkg-features { list-style: none; text-align: left; margin: 20px 0; }
+        .pkg-features li { padding: 6px 0; font-size: 0.9rem; }
+        .pkg-features li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+        .btn-outline:hover { background: var(--accent); color: white; }
+        .stats-row { display: flex; gap: 24px; flex-wrap: wrap; margin: 32px 0; }
+        .stat-item { text-align: center; flex: 1; min-width: 120px; }
+        .stat-num { font-size: 2.2rem; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 0.85rem; color: var(--muted); }
+        .layer-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .layer-bar:last-child { border-bottom: none; }
+        .layer-num {
+            width: 36px; height: 36px;
+            background: var(--accent);
+            color: white;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .layer-name { font-weight: 600; flex: 1; }
+        .layer-desc { color: var(--muted); font-size: 0.85rem; }
+        .compliance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+        .compliance-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .compliance-item.warning { background: #fffbeb; border-color: #fde68a; }
+        .compliance-item.critical { background: #fef2f2; border-color: #fecaca; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot-green { background: var(--green); }
+        .dot-orange { background: var(--orange); }
+        .dot-red { background: var(--red); }
+        .footer {
+            background: var(--primary);
+            color: rgba(255,255,255,0.7);
+            padding: 40px 0;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .footer strong { color: white; }
+        .toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 32px; margin: 24px 0; }
+        .toc ol { padding-left: 20px; }
+        .toc li { padding: 4px 0; }
+        .toc a { color: var(--accent); text-decoration: none; font-weight: 500; }
+        .toc a:hover { text-decoration: underline; }
+        .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero { padding: 48px 20px; }
+            section { padding: 40px 0; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>Omni-CleanerMail</h1>
+    <p class="subtitle">Plataforma empresarial de purificación, protección y reporte de correo electrónico con-capacidad offline, soberanía de datos y cumplimiento normativo completo.</p>
+    <div>
+        <span class="badge">Kaspersky Secure Mail Gateway</span>
+        <span class="badge">ClamAV + YARA</span>
+        <span class="badge">Sandboxing Local</span>
+        <span class="badge">ML On-Premise</span>
+        <span class="badge">Air-Gapped Ready</span>
+        <span class="badge">ENS / ISO 27001 / NIS2</span>
+    </div>
+</div>
+
+<!-- CONTENIDO -->
+<div class="container">
+
+    <!-- TOC -->
+    <section>
+        <div class="toc">
+            <h3>Índice</h3>
+            <ol>
+                <li><a href="#descripcion">Descripción Comercial</a></li>
+                <li><a href="#arquitectura">Arquitectura y Capas</a></li>
+                <li><a href="#tecnologias">Tecnologías Integradas</a></li>
+                <li><a href="#funcionalidades">Funcionalidades por Capa</a></li>
+                <li><a href="#innovacion">Componentes de I+D+i</a></li>
+                <li><a href="#compliance">Cumplimiento Normativo</a></li>
+                <li><a href="#sectores">Sectores Objetivo</a></li>
+                <li><a href="#equipo">Equipo de Despliegue</a></li>
+                <li><a href="#pricing">Estimación de Precio</a></li>
+                <li><a href="#paquetes">Paquetes Comerciales</a></li>
+                <li><a href="#roadmap">Roadmap de Implementación</a></li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- 1. DESCRIPCION COMERCIAL -->
+    <section id="descripcion">
+        <h2>1. Descripción Comercial</h2>
+        <p class="section-desc">
+            <strong>Omni-CleanerMail</strong> es una plataforma empresarial de purificación, protección y reporte de correo electrónico diseñada para organizaciones con requisitos de soberanía de datos, operación offline y cumplimiento normativo (ENS, ISO 27001, NIS2, GDPR). A diferencia de soluciones cloud-only, Omni-CleanerMail opera completamente on-premise, incluyendo capacidades de análisis de amenazas sin conexión a Internet.
+        </p>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-num">7</div>
+                <div class="stat-label">Capas de Arquitectura</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">6</div>
+                <div class="stat-label">Motores de Análisis</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">172</div>
+                <div class="stat-label">Indicadores de Seguridad</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">15+</div>
+                <div class="stat-label">Métricas Organizacionales</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Operable Offline</div>
+            </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 32px;">
+            <div class="card">
+                <div class="card-icon icon-blue">🛡️</div>
+                <h3>Protección Multi-Motor</h3>
+                <p>Análisis paralelo con KSMG, ClamAV, YARA, sandboxing local y ML on-premise. Cada mensaje se evalúa con mínimo 3 motores independientes antes de determinar veredicto.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-green">🔒</div>
+                <h3>Soberanía Total</h3>
+                <p>Sin dependencia de servicios cloud. Todos los motores de análisis, modelos ML y bases de datos de firmas operan en local. Ideal para defensa, sanidad, banca y administración pública.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-orange">📊</div>
+                <h3>Gobernanza y Reporting</h3>
+                <p>Dashboards multinivel (empresa, departamento, usuario) con métricas de amenazas, scoring de riesgo y reportes autogenerados para CISOs. Trazabilidad auditable con hash-chain HMAC.</p>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 2. ARQUITECTURA -->
+    <section id="arquitectura">
+        <h2>2. Arquitectura y Capas</h2>
+        <p class="section-desc">Omni-CleanerMail se estructura en 7 capas diferenciadas, cada una con responsabilidades claras y interfaces documentadas.</p>
+
+        <div class="card" style="margin-bottom: 24px;">
+            <pre style="font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.8rem; line-height: 1.5; overflow-x: auto; white-space: pre;">
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    OMNI-CLEANERMAIL — ARQUITECTURA                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 5: DASHBOARD Y REPORTES                                     │   │
+│  │ ┌──────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────────┐  │   │
+│  │ │ Empresa  │ │ Departamento │ │  Usuario   │ │ CISO Reports │  │   │
+│  │ └──────────┘ └──────────────┘ └────────────┘ └──────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                              ▲                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 4: PURIFICACIÓN Y CUARENTENA                                │   │
+│  │ ┌────────────┐ ┌──────────────┐ ┌──────────────┐               │   │
+│  │ │ Cuarentena │ │ Auto-Liberar │ │ Hash-Chain   │               │   │
+│  │ │ Central    │ │ (Usuario)    │ │ Auditoría    │               │   │
+│  │ └────────────┘ └──────────────┘ └──────────────┘               │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                              ▲                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 3: CORRELACIÓN Y SCORING                                    │   │
+│  │ ┌──────────────────────┐ ┌────────────────────────────────────┐ │   │
+│  │ │ Fusión Multi-Motor   │ │ Ponderación Adaptativa de Riesgo  │ │   │
+│  │ └──────────────────────┘ └────────────────────────────────────┘ │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                              ▲                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 2: ANÁLISIS MULTI-MOTOR                                     │   │
+│  │ ┌──────┐ ┌──────┐ ┌──────┐ ┌───────┐ ┌──────┐ ┌────────────┐ │   │
+│  │ │ KSMG │ │ClamAV│ │YARA  │ │Sandbox│ │ ML   │ │ Adjuntos   │ │   │
+│  │ │      │ │      │ │      │ │CAPE   │ │ONNX  │ │ OOXML/PDF  │ │   │
+│  │ └──────┘ └──────┘ └──────┘ └───────┘ └──────┘ └────────────┘ │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                              ▲                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 1: INGESTA Y RECEPCIÓN                                     │   │
+│  │ ┌──────────────────────────┐ ┌────────────────────────────────┐ │   │
+│  │ │ KSMG Gateway (MTA)       │ │ Fallback Local (Postfix)      │ │   │
+│  │ │ SPF/DKIM/DMARC           │ │ Queue CIFRADA                  │ │   │
+│  │ └──────────────────────────┘ └────────────────────────────────┘ │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 6: INTEGRACIONES                                            │   │
+│  │ ┌───────┐ ┌─────────┐ ┌──────────┐ ┌──────┐ ┌──────────────┐  │   │
+│  │ │AD/LDAP│ │SIEM/CEF │ │Ticketing │ │ DLP  │ │ SMTP Notify  │  │   │
+│  │ └───────┘ └─────────┘ └──────────┘ └──────┘ └──────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ CAPA 7: LICENSE INTEGRATION LAYER (LIL)                          │   │
+│  │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────────────┐  │   │
+│  │ │Ed25519   │ │Hardware  │ │Air-Gapped│ │ Audit Events       │  │   │
+│  │ │Validate  │ │Binding   │ │ License  │ │ & Compliance       │  │   │
+│  │ └──────────┘ └──────────┘ └──────────┘ └────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <div class="layer-bar">
+                <div class="layer-num">1</div>
+                <div>
+                    <div class="layer-name">Ingesta y Recepción</div>
+                    <div class="layer-desc">KSMG como MTA primario con fallback a Postfix local. Validación SPF/DKIM/DMARC en gateway y de forma local. Cola cifrada AES-256-GCM.</div>
+                </div>
+            </div>
+            <div class="layer-bar">
+                <div class="layer-num">2</div>
+                <div>
+                    <div class="layer-name">Análisis Multi-Motor</div>
+                    <div class="layer-desc">6 motores en paralelo: KSMG AV/AS/AP, ClamAV heurístico, YARA reglas custom, CAPE/Cuckoo sandbox, ML local ONNX/TFLite, análisis estático de adjuntos (OOXML macros, PDF, scripts).</div>
+                </div>
+            </div>
+            <div class="layer-bar">
+                <div class="layer-num">3</div>
+                <div>
+                    <div class="layer-name">Correlación y Scoring</div>
+                    <div class="layer-desc">Fusión de veredictos multi-motor con scoring ponderado adaptativo. Algoritmo de consenso con pesos configurables por tipo de amenaza.</div>
+                </div>
+            </div>
+            <div class="layer-bar">
+                <div class="layer-num">4</div>
+                <div>
+                    <div class="layer-name">Purificación y Cuarentena</div>
+                    <div class="layer-desc">Aislamiento de mensajes sospechosos. Autoservicio de cuarentena para usuarios finales. Trazabilidad con hash-chain HMAC-SHA256 inmutable.</div>
+                </div>
+            </div>
+            <div class="layer-bar">
+                <div class="layer-num">5</div>
+                <div>
+                    <div class="layer-name">Dashboard y Reportes</div>
+                    <div class="layer-desc">3 vistas: Empresa (postura global, mapa de calor), Departamento (scoring, usuarios de riesgo), Usuario (cuarentena personal, recomendaciones). Reportes CISO autogenerados.</div>
+                </div>
+            </div>
+            <div class="layer-bar">
+                <div class="layer-num">6</div>
+                <div>
+                    <div class="layer-name">Integraciones</div>
+                    <div class="layer-desc">AD/LDAP (atribución usuario/departamento sin PII), SIEM vía CEF/syslog, ticketing, DLP, notificaciones SMTP.</div>
+                </div>
+            </div>
+            <div class="layer-bar">
+                <div class="layer-num">7</div>
+                <div>
+                    <div class="layer-name">License Integration Layer (LIL)</div>
+                    <div class="layer-desc">Gestión de licencias Ed25519 offline, hardware binding, modo de gracia, air-gapped licensing, eventos auditables de licenciamiento.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 3. TECNOLOGIAS -->
+    <section id="tecnologias">
+        <h2>3. Tecnologías Integradas</h2>
+        <p class="section-desc">Stack tecnológico completo con componentes open-source, comerciales y componentes propios de I+D+i.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>🔐 Seguridad y Análisis de Amenazas</h3>
+                <div style="margin-top: 12px;">
+                    <span class="tech-tag highlight">Kaspersky Secure Mail Gateway</span>
+                    <span class="tech-tag">ClamAV</span>
+                    <span class="tech-tag">YARA</span>
+                    <span class="tech-tag">CAPE Sandbox</span>
+                    <span class="tech-tag">Cuckoo Sandbox</span>
+                    <span class="tech-tag">SPF/DKIM/DMARC</span>
+                    <span class="tech-tag">PGP / S-MIME</span>
+                    <span class="tech-tag">HMAC-SHA256</span>
+                    <span class="tech-tag">OOXML Analysis</span>
+                    <span class="tech-tag">PDF Parser</span>
+                    <span class="tech-tag">Macro Detection</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🧠 Machine Learning y Análisis</h3>
+                <div style="margin-top: 12px;">
+                    <span class="tech-tag highlight">ONNX Runtime</span>
+                    <span class="tech-tag">TensorFlow Lite</span>
+                    <span class="tech-tag">NLP On-Premise</span>
+                    <span class="tech-tag">Phishing Detection ES/PT</span>
+                    <span class="tech-tag">Scoring Adaptativo</span>
+                    <span class="tech-tag">Fusión Multi-Motor</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🏗️ Infraestructura y Backend</h3>
+                <div style="margin-top: 12px;">
+                    <span class="tech-tag">Python 3.11+</span>
+                    <span class="tech-tag">FastAPI</span>
+                    <span class="tech-tag">Docker</span>
+                    <span class="tech-tag">SQLite</span>
+                    <span class="tech-tag">Redis</span>
+                    <span class="tech-tag">Postfix (MTA)</span>
+                    <span class="tech-tag">Nginx</span>
+                    <span class="tech-tag">Grafana</span>
+                    <span class="tech-tag">Prometheus</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🔑 Criptografía y Licenciamiento</h3>
+                <div style="margin-top: 12px;">
+                    <span class="tech-tag highlight">Ed25519</span>
+                    <span class="tech-tag">RSA 4096</span>
+                    <span class="tech-tag">AES-256-GCM</span>
+                    <span class="tech-tag">SHA-512</span>
+                    <span class="tech-tag">Miller-Rabin</span>
+                    <span class="tech-tag">Hardware Binding</span>
+                    <span class="tech-tag">OMNI-Lic</span>
+                    <span class="tech-tag">Air-Gapped License</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📡 Integraciones Empresariales</h3>
+                <div style="margin-top: 12px;">
+                    <span class="tech-tag">Active Directory</span>
+                    <span class="tech-tag">LDAP</span>
+                    <span class="tech-tag">SIEM (CEF/syslog)</span>
+                    <span class="tech-tag">Syslog-ng</span>
+                    <span class="tech-tag">Ticketing (API)</span>
+                    <span class="tech-tag">DLP Integration</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📋 Cumplimiento y Auditoría</h3>
+                <div style="margin-top: 12px;">
+                    <span class="tech-tag highlight">ENS Alto</span>
+                    <span class="tech-tag highlight">ISO 27001</span>
+                    <span class="tech-tag highlight">NIS2</span>
+                    <span class="tech-tag">GDPR</span>
+                    <span class="tech-tag">Common Criteria</span>
+                    <span class="tech-tag">Hash-Chain Audit</span>
+                    <span class="tech-tag">HMAC Integrity</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 4. FUNCIONALIDADES -->
+    <section id="funcionalidades">
+        <h2>4. Funcionalidades por Capa</h2>
+
+        <div class="grid-2" style="margin-top: 24px;">
+            <div class="card">
+                <h3>Capa 1 — Ingesta</h3>
+                <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.9rem; color: var(--muted);">
+                    <li>Gateway KSMG como MTA primario</li>
+                    <li>Fallback a Postfix cuando KSMG no disponible</li>
+                    <li>Validación SPF/DKIM/DMARC (gateway + local)</li>
+                    <li>Cola de mensajes cifrada AES-256-GCM</li>
+                    <li>Recepción simultánea IPv4/IPv6</li>
+                    <li>Rate limiting por dominio remitente</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Capa 2 — Análisis</h3>
+                <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.9rem; color: var(--muted);">
+                    <li>Antivirus/Antispam/Antiphishing via KSMG</li>
+                    <li>ClamAV: heurístico + firmas (10M+ reglas)</li>
+                    <li>YARA: reglas custom de amenazas específicas</li>
+                    <li>CAPE/Cuckoo: sandboxing determinista de adjuntos</li>
+                    <li>ML local (ONNX/TFLite): phishing ES/PT sin Internet</li>
+                    <li>Análisis OOXML: macros VBA, XML embebido</li>
+                    <li>PDF parsing: scripts embebidos, exploits conocidos</li>
+                    <li>Análisis de enlaces: reputación local, rewriting</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Capa 3 — Correlación</h3>
+                <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.9rem; color: var(--muted);">
+                    <li>Fusión de veredictos de 6 motores</li>
+                    <li>Scoring ponderado adaptativo (0-100)</li>
+                    <li>Pesos configurables por tipo de amenaza</li>
+                    <li>Umbral configurable: bloqueo / cuarentena / permitir</li>
+                    <li>Re-evaluación con updates de firmas</li>
+                    <li>Historial de scoring por remitente/dominio</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Capa 4 — Purificación</h3>
+                <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.9rem; color: var(--muted);">
+                    <li>Cuarentena central con TTL configurable</li>
+                    <li>Autoservicio: usuario libera/solicita liberación</li>
+                    <li>Hash-chain HMAC-SHA256 inmutable por mensaje</li>
+                    <li>Trazabilidad completa de acciones sobre cuarentena</li>
+                    <li>Retención automática según política</li>
+                    <li>Exportación de evidencia para forense</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Capa 5 — Dashboard</h3>
+                <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.9rem; color: var(--muted);">
+                    <li>Vista Empresa: postura global, mapa de calor deptos</li>
+                    <li>Vista Departamento: scoring, usuarios de riesgo</li>
+                    <li>Vista Usuario: cuarentena personal, nivel de riesgo</li>
+                    <li>Reportes CISO autogenerados (narrativos)</li>
+                    <li>Top 10 destinatarios/remientes de riesgo</li>
+                    <li>Tendencias y anomalías detectadas</li>
+                    <li>Exportación PDF/CSV</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Capa 6 — Integraciones</h3>
+                <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.9rem; color: var(--muted);">
+                    <li>AD/LDAP: atribución usuario/dept sin exponer PII</li>
+                    <li>SIEM: publicación CEF/syslog en tiempo real</li>
+                    <li>Ticketing: apertura automática de incidentes</li>
+                    <li>DLP: integración con políticas de prevención</li>
+                    <li>SMTP: notificaciones y alertas por correo</li>
+                    <li>API REST completa para automatización</li>
+                </ul>
+            </div>
+            <div class="card" style="grid-column: span 2;">
+                <h3>Capa 7 — License Integration Layer (LIL)</h3>
+                <div class="grid-3" style="margin-top: 12px;">
+                    <div>
+                        <strong style="font-size: 0.85rem;">Activación y Validación</strong>
+                        <ul style="padding-left: 18px; font-size: 0.85rem; color: var(--muted); margin-top: 4px;">
+                            <li>Firma Ed25519 offline</li>
+                            <li>Validación semiprimo (Miller-Rabin)</li>
+                            <li>Sello SHA-512 verificable</li>
+                            <li>Sistema auto-detectado (slug)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong style="font-size: 0.85rem;">Hardware Binding</strong>
+                        <ul style="padding-left: 18px; font-size: 0.85rem; color: var(--muted); margin-top: 4px;">
+                            <li>Fingerprint SHA-256 del host</li>
+                            <li>IP/MAC/hostname vinculados</li>
+                            <li>Verificación periódica (heartbeat)</li>
+                            <li>Self-destruct en violación</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong style="font-size: 0.85rem;">Air-Gapped</strong>
+                        <ul style="padding-left: 18px; font-size: 0.85rem; color: var(--muted); margin-top: 4px;">
+                            <li>Activación por archivo firmado</li>
+                            <li>Códigos offline (USB/sneakernet)</li>
+                            <li>Modo de gracia configurable</li>
+                            <li>100% local, sin callback</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 5. INNOVACION -->
+    <section id="innovacion">
+        <h2>5. Componentes de I+D+i (Innovación Técnica)</h2>
+        <p class="section-desc">Componentes con TRL 3-7 que representan innovación real, no mera integración de productos existentes.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>1. Motor de Fusión Multi-Motor</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Algoritmo de consenso que combina veredictos de 6 motores con pesos adaptativos. No es un simple "promedio" — aplica lógica difusa para resolver conflictos entre motores.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #dbeafe;">TRL 5</span>
+                    <span class="tech-tag">Scoring Ponderado</span>
+                    <span class="tech-tag">Lógica Difusa</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>2. ML Local Phishing ES/PT</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Modelo NLP entrenado con corpus de phishing en español y portugués, exportado a ONNX/TFLite para inferencia local sin conexión. Detección de ingeniería social en idiomas específicos.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #fef3c7;">TRL 4</span>
+                    <span class="tech-tag">ONNX Runtime</span>
+                    <span class="tech-tag">NLP Offline</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>3. Sandboxing Determinista Air-Gapped</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">CAPE/Cuckoo autoalojado con snapshots deterministas y reproducibles. Análisis de comportamiento sin dependencia de feeds cloud. Entorno air-gapped validado.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #dbeafe;">TRL 5</span>
+                    <span class="tech-tag">CAPE Sandbox</span>
+                    <span class="tech-tag">Snapshots Deterministas</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>4. Atribución AD sin PII</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Motor que resuelve usuario/departamento vía AD/LDAP exponiendo solo identificadores pseudonimizados. Cumple GDPR evitando exponer datos personales en logs y dashboards.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #d1fae5;">TRL 6</span>
+                    <span class="tech-tag">Pseudonimización</span>
+                    <span class="tech-tag">LDAP Bind</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>5. Reportes Narrativos CISO</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Generador automático de informes ejecutivos en lenguaje natural para CISOs. Transforma datos crígticos en narrativas de riesgo comprensibles, con recomendaciones accionables.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #fef3c7;">TRL 4</span>
+                    <span class="tech-tag">NLG Templates</span>
+                    <span class="tech-tag">Narrativa Automática</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>6. Purificación con Hash-Chain</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Cada acción sobre un mensaje en cuarentena (liberar, borrar, inspeccionar) se registra en una cadena hash HMAC-SHA256 local e inmutable. Trazabilidad forense completa sin blockchain.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #d1fae5;">TRL 6</span>
+                    <span class="tech-tag">HMAC-SHA256 Chain</span>
+                    <span class="tech-tag">Audit Trail</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>7. Licenciamiento Offline con Hardware Binding</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Sistema OMNI-Lic con Ed25519, semiprimo verificable, hardware binding (fingerprint SHA-256) y soporte completo para air-gapped. Incluye interfaz UI de solicitud/carga.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #dbeafe;">TRL 7</span>
+                    <span class="tech-tag">Ed25519</span>
+                    <span class="tech-tag">OMNI-Lic</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>8. Motor NLP Anti-Phishing Contextual</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Análisis semántico del contenido del correo para detectar phishing contextual (urgencia, autoridad falsa, suplantación de identidad) sin depender de listas negras.</p>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tech-tag" style="background: #fef3c7;">TRL 4</span>
+                    <span class="tech-tag">Transformer Lite</span>
+                    <span class="tech-tag">Contextual Analysis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 6. CUMPLIMIENTO -->
+    <section id="compliance">
+        <h2>6. Cumplimiento Normativo</h2>
+        <p class="section-desc">Omni-CleanerMail cumple con los 172 indicadores de seguridad de SECURITY-INDICATORS.md y las reglas de integración de OMNI-Lic de PROMPT_INTEGRACION_LICENCIA.md.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Indicadores de Seguridad (172 items)</h3>
+                <div class="compliance-grid" style="margin-top: 12px;">
+                    <div class="compliance-item"><span class="dot dot-green"></span> Autenticación (19/19)</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> HTTP/API (13/13)</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Auditoría (15/16)</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Licencias (17/22)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> Criptografía (5/17)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> Containers (11/16)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> Runtime (10/13)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> BD (6/11)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> Monitorización (9/12)</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Backup (7/8)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> Cumplimiento (6/12)</div>
+                    <div class="compliance-item warning"><span class="dot dot-orange"></span> Código (6/13)</div>
+                </div>
+                <p style="margin-top: 12px; font-size: 0.85rem; color: var(--muted);"><strong>Implementación actual: 124/172 (72%).</strong> Objetivo Omni-CleanerMail: 100% en Nivel 3 (Enterprise).</p>
+            </div>
+            <div class="card">
+                <h3>Integración OMNI-Lic</h3>
+                <div class="compliance-grid" style="margin-top: 12px;">
+                    <div class="compliance-item"><span class="dot dot-green"></span> Activación offline (Ed25519)</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Hardware binding (fingerprint)</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Semiprimo verificable</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Validación sin Internet</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Interfaz UI de solicitud</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Avisos 30/15/7/3/2/1 día</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Bloqueo por expiración</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Modo gracia air-gapped</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Audit events de licencia</div>
+                    <div class="compliance-item"><span class="dot dot-green"></span> Self-destruct en violación</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+            <h3>Estándares y Certificaciones</h3>
+            <div class="compliance-grid">
+                <div class="compliance-item"><span class="dot dot-green"></span> <strong>ENS Alto</strong> — Esquema Nacional de Seguridad</div>
+                <div class="compliance-item"><span class="dot dot-green"></span> <strong>ISO 27001</strong> — Gestión de seguridad</div>
+                <div class="compliance-item"><span class="dot dot-green"></span> <strong>NIS2</strong> — Directiva europea ciberseguridad</div>
+                <div class="compliance-item"><span class="dot dot-green"></span> <strong>GDPR</strong> — Protección de datos</div>
+                <div class="compliance-item"><span class="dot dot-orange"></span> <strong>Common Criteria</strong> — Certificación (roadmap)</div>
+                <div class="compliance-item"><span class="dot dot-green"></span> <strong>ITAR/EAR</strong> — Export control (air-gapped)</div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 7. SECTORES -->
+    <section id="sectores">
+        <h2>7. Sectores Objetivo</h2>
+
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-icon icon-blue">🏦</div>
+                <h3>Banca y Finanzas</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);">Requisitos estrictos de soberanía, PCI-DSS, reporting regulatorio. Exigencia de operación sin dependencia cloud para comunicaciones internas.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-green">🏥</div>
+                <h3>Sanidad</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);"> Datos sensibles de pacientes (RGPD/LOPD), historiales clínicos por correo, requisitos de disponibilidad 24/7 con aire acondicionado garantizado.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-cyan">🏛️</div>
+                <h3>Administración Pública</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);">ENS obligatorio, soberanía de datos, air-gapped en entornos clasificados. Integración con SIEM estatal.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-red">⚔️</div>
+                <h3>Defensa y Seguridad</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);">Entornos air-gapped, cero dependencia externa, certificaciones de seguridad militares. Compliance export control (ITAR, EAR).</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-orange">⚡</div>
+                <h3>Industria Crítica</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);">Energy, telecomunicaciones, transporte. NIS2 obligatorio, disponibilidad de servicio, resiliencia ante incidentes.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon icon-blue">⚖️</div>
+                <h3>Sector Legal</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);">Secreto profesional, confidencialidad de comunicaciones cliente-abogado, retención documental, trazabilidad auditable.</p>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 8. EQUIPO -->
+    <section id="equipo">
+        <h2>8. Equipo de Despliegue</h2>
+        <p class="section-desc">Roles necesarios para el despliegue e implementación de Omni-CleanerMail en entorno productivo.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Rol</th>
+                    <th>Responsabilidades Principales</th>
+                    <th>Horas Est.</th>
+                    <th>Tarifa (USD/h)</th>
+                    <th>Coste (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><strong>Arquitecto de Soluciones</strong></td>
+                    <td>Arquitectura sistema, diseño de capas, integración KSMG + offline, decisiones de seguridad</td>
+                    <td>480</td>
+                    <td>$13.00</td>
+                    <td>$6,240.00</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><strong>Ingeniero Backend Senior</strong></td>
+                    <td>Core del sistema, APIs, motor de fusión, integraciones SIEM/AD, colas de correo</td>
+                    <td>3,520</td>
+                    <td>$13.00</td>
+                    <td>$45,760.00</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><strong>Ingeniero de Machine Learning</strong></td>
+                    <td>Modelos NLP phishing ES/PT, entrenamiento, exportación ONNX/TFLite, scoring adaptativo</td>
+                    <td>1,280</td>
+                    <td>$13.00</td>
+                    <td>$16,640.00</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td><strong>Especialista en Ciberseguridad</strong></td>
+                    <td>Hardening, YARA rules, sandboxing, validación de firmas, pentesting, secure coding</td>
+                    <td>960</td>
+                    <td>$13.00</td>
+                    <td>$12,480.00</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td><strong>Ingeniero DevOps / SRE</strong></td>
+                    <td>Docker hardening, CI/CD, despliegue, monitoreo, backup, redes aisladas</td>
+                    <td>960</td>
+                    <td>$13.00</td>
+                    <td>$12,480.00</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td><strong>Desarrollador Frontend</strong></td>
+                    <td>Dashboards (Empresa/Depto/Usuario), UI de licencia, cuarentena autoservicio, Grafana</td>
+                    <td>1,280</td>
+                    <td>$13.00</td>
+                    <td>$16,640.00</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td><strong>Ingeniero de Licenciamiento</strong></td>
+                    <td>Integración OMNI-Lic, LIL, hardware binding, Ed25519, air-gapped licensing</td>
+                    <td>640</td>
+                    <td>$13.00</td>
+                    <td>$8,320.00</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td><strong>Científico de Datos</strong></td>
+                    <td>Análisis de corpus phishing, tuning de modelos, métricas de accuracy, validación de detección</td>
+                    <td>640</td>
+                    <td>$13.00</td>
+                    <td>$8,320.00</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td><strong>Auditor de Seguridad</strong></td>
+                    <td>Verificación de cumplimiento SECURITY-INDICATORS, auditoría licencias, pentesting final</td>
+                    <td>320</td>
+                    <td>$13.00</td>
+                    <td>$4,160.00</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td><strong>Gestor de Producto</strong></td>
+                    <td>Requisitos, roadmap, stakeholder management, coordinación pilotos, KPIs</td>
+                    <td>320</td>
+                    <td>$13.00</td>
+                    <td>$4,160.00</td>
+                </tr>
+                <tr>
+                    <td>11</td>
+                    <td><strong>Redactor Técnico</strong></td>
+                    <td>Documentación, manuales, guías de despliegue, compliance docs, reportes</td>
+                    <td>320</td>
+                    <td>$13.00</td>
+                    <td>$4,160.00</td>
+                </tr>
+                <tr>
+                    <td>12</td>
+                    <td><strong>QA Engineer</strong></td>
+                    <td>Tests automatizados (20+ casos), pruebas de integración, validación de escenarios</td>
+                    <td>320</td>
+                    <td>$13.00</td>
+                    <td>$4,160.00</td>
+                </tr>
+                <tr style="background: #f0f9ff; font-weight: 700;">
+                    <td colspan="3" style="text-align: right;"><strong>TOTAL EQUIPO</strong></td>
+                    <td><strong>11,040</strong></td>
+                    <td><strong>—</strong></td>
+                    <td><strong>$143,520.00</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 9. PRECIOS -->
+    <section id="pricing">
+        <h2>9. Estimación de Precio Completa</h2>
+        <p class="section-desc">Coste total del proyecto I+D+i de 18 meses, incluyendo equipo, infraestructura, licencias, pilotos y certificaciones. Tarifa base: <strong>$13.00 USD/hora</strong>.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Detalle</th>
+                    <th style="text-align: right;">Coste (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1. Equipo I+D (12 roles)</strong></td>
+                    <td>11,040 horas × $13/h (ver tabla anterior)</td>
+                    <td style="text-align: right;">$143,520.00</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Infraestructura</strong></td>
+                    <td>Servidores de desarrollo, sandbox, pruebas air-gapped, storage</td>
+                    <td style="text-align: right;">$18,000.00</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Licencias KSMG</strong></td>
+                    <td>Kaspersky Secure Mail Gateway — licencias para pilotos (3 sectores)</td>
+                    <td style="text-align: right;">$24,000.00</td>
+                </tr>
+                <tr>
+                    <td><strong>4. Hardware Pilotos</strong></td>
+                    <td>3 servidores para pilotos (banca, sanidad, administración pública)</td>
+                    <td style="text-align: right;">$15,000.00</td>
+                </tr>
+                <tr>
+                    <td><strong>5. Certificaciones</strong></td>
+                    <td>ENS, ISO 27001 pre-audit, Common Criteria (roadmap)</td>
+                    <td style="text-align: right;">$12,000.00</td>
+                </tr>
+                <tr>
+                    <td><strong>6. Entrenamiento ML</strong></td>
+                    <td>GPU training (cloud temporal), corpus de datos, etiquetado</td>
+                    <td style="text-align: right;">$8,000.00</td>
+                </tr>
+                <tr>
+                    <td><strong>7. Contingencia (10%)</strong></td>
+                    <td>Imprevistos, cambios de alcance, costes adicionales</td>
+                    <td style="text-align: right;">$22,052.00</td>
+                </tr>
+                <tr style="background: var(--primary); color: white; font-weight: 700;">
+                    <td colspan="2" style="text-align: right; font-size: 1.1rem;"><strong>TOTAL PROYECTO I+D+i (18 meses)</strong></td>
+                    <td style="text-align: right; font-size: 1.3rem;"><strong>$242,572.00</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card" style="margin-top: 24px;">
+            <h3>Coste por Hora por Rol — Desglose Detallado</h3>
+            <table style="margin-top: 12px;">
+                <thead>
+                    <tr>
+                        <th>Rol</th>
+                        <th style="text-align: center;">Horas</th>
+                        <th style="text-align: right;">Tarifa (USD/h)</th>
+                        <th style="text-align: right;">Coste (USD)</th>
+                        <th style="text-align: right;">% del Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Ingeniero Backend Senior</td><td style="text-align: center;">3,520</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$45,760</td><td style="text-align: right;">31.9%</td></tr>
+                    <tr><td>Ingeniero de Machine Learning</td><td style="text-align: center;">1,280</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$16,640</td><td style="text-align: right;">11.6%</td></tr>
+                    <tr><td>Desarrollador Frontend</td><td style="text-align: center;">1,280</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$16,640</td><td style="text-align: right;">11.6%</td></tr>
+                    <tr><td>Especialista en Ciberseguridad</td><td style="text-align: center;">960</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$12,480</td><td style="text-align: right;">8.7%</td></tr>
+                    <tr><td>Ingeniero DevOps / SRE</td><td style="text-align: center;">960</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$12,480</td><td style="text-align: right;">8.7%</td></tr>
+                    <tr><td>Arquitecto de Soluciones</td><td style="text-align: center;">480</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$6,240</td><td style="text-align: right;">4.3%</td></tr>
+                    <tr><td>Ingeniero de Licenciamiento</td><td style="text-align: center;">640</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$8,320</td><td style="text-align: right;">5.8%</td></tr>
+                    <tr><td>Científico de Datos</td><td style="text-align: center;">640</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$8,320</td><td style="text-align: right;">5.8%</td></tr>
+                    <tr><td>Auditor de Seguridad</td><td style="text-align: center;">320</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$4,160</td><td style="text-align: right;">2.9%</td></tr>
+                    <tr><td>Gestor de Producto</td><td style="text-align: center;">320</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$4,160</td><td style="text-align: right;">2.9%</td></tr>
+                    <tr><td>Redactor Técnico</td><td style="text-align: center;">320</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$4,160</td><td style="text-align: right;">2.9%</td></tr>
+                    <tr><td>QA Engineer</td><td style="text-align: center;">320</td><td style="text-align: right;">$13.00</td><td style="text-align: right;">$4,160</td><td style="text-align: right;">2.9%</td></tr>
+                    <tr style="background: #f0f9ff; font-weight: 700;">
+                        <td><strong>TOTAL</strong></td>
+                        <td style="text-align: center;"><strong>11,040</strong></td>
+                        <td style="text-align: right;"><strong>—</strong></td>
+                        <td style="text-align: right;"><strong>$143,520</strong></td>
+                        <td style="text-align: right;"><strong>100%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 10. PAQUETES -->
+    <section id="paquetes">
+        <h2>10. Paquetes Comerciales de Despliegue</h2>
+        <p class="section-desc">Opciones de implementación según tamaño de organización y alcance de funcionalidades.</p>
+
+        <div class="grid-3" style="margin-top: 24px;">
+            <div class="pkg-card">
+                <div class="pkg-name">Essential</div>
+                <div class="pkg-target">Pequeñas empresas (hasta 200 usuarios)</div>
+                <div class="pkg-price">
+                    <div class="price-tag">$38,500</div>
+                    <div class="price-period">Implementación + 1er año soporte</div>
+                </div>
+                <ul class="pkg-features">
+                    <li>KSMG Gateway + fallback Postfix</li>
+                    <li>ClamAV + YARA (básico)</li>
+                    <li>Cuarentena central</li>
+                    <li>Dashboard básico (Empresa)</li>
+                    <li>Integración AD/LDAP</li>
+                    <li>Licenciamiento OMNI-Lic</li>
+                    <li>Soporte email (8×5)</li>
+                    <li>Despliegue ~4 semanas</li>
+                </ul>
+                <a href="#contacto" class="btn btn-outline" style="width: 100%;">Solicitar Info</a>
+            </div>
+
+            <div class="pkg-card featured">
+                <div class="pkg-name">Enterprise</div>
+                <div class="pkg-target">Medianas empresas (200-2000 usuarios)</div>
+                <div class="pkg-price">
+                    <div class="price-tag">$89,000</div>
+                    <div class="price-period">Implementación + 1er año soporte</div>
+                </div>
+                <ul class="pkg-features">
+                    <li>Todo lo Essential +</li>
+                    <li>CAPE Sandbox local</li>
+                    <li>ML phishing ES/PT (ONNX)</li>
+                    <li>Fusión multi-motor con scoring</li>
+                    <li>3 vistas dashboard</li>
+                    <li>SIEM/CEF/syslog</li>
+                    <li>Reportes CISO autogenerados</li>
+                    <li>Purificación hash-chain</li>
+                    <li>Soporte prioritario (16×5)</li>
+                    <li>Despliegue ~8 semanas</li>
+                </ul>
+                <a href="#contacto" class="btn btn-primary" style="width: 100%;">Solicitar Info</a>
+            </div>
+
+            <div class="pkg-card">
+                <div class="pkg-name">Sovereign</div>
+                <div class="pkg-target">Grandes organizaciones / Air-gapped (2000+ usuarios)</div>
+                <div class="pkg-price">
+                    <div class="price-tag">$242,572</div>
+                    <div class="price-period">Proyecto completo I+D+i (18 meses)</div>
+                </div>
+                <ul class="pkg-features">
+                    <li>Todo lo Enterprise +</li>
+                    <li>Modo air-gapped puro</li>
+                    <li>Licenciamiento offline completo</li>
+                    <li>Actualización por medios físicos</li>
+                    <li>Pilotos en 3 sectores</li>
+                    <li>Certificaciones ENS/ISO</li>
+                    <li>Soporte dedicado (24×7)</li>
+                    <li>SLA 99.9% uptime</li>
+                    <li>Customización completa</li>
+                    <li>Source code access</li>
+                </ul>
+                <a href="#contacto" class="btn btn-outline" style="width: 100%;">Contactar</a>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+            <h3>Coste Anual Recurrente (Post-Implementación)</h3>
+            <table style="margin-top: 12px;">
+                <thead>
+                    <tr>
+                        <th>Concepto</th>
+                        <th>Essential</th>
+                        <th>Enterprise</th>
+                        <th>Sovereign</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Licencias KSMG</td><td>$4,800/año</td><td>$9,600/año</td><td>$19,200/año</td></tr>
+                    <tr><td>Mantenimiento software</td><td>$3,600/año</td><td>$8,000/año</td><td>$18,000/año</td></tr>
+                    <tr><td>Soporte técnico</td><td>$2,400/año</td><td>$6,000/año</td><td>$15,000/año</td></tr>
+                    <tr><td>Actualizaciones firmas ML</td><td>—</td><td>$3,000/año</td><td>$6,000/año</td></tr>
+                    <tr><td>Auditoría anual</td><td>—</td><td>—</td><td>$8,000/año</td></tr>
+                    <tr style="background: #f0f9ff; font-weight: 700;">
+                        <td><strong>Total Anual Recurrente</strong></td>
+                        <td><strong>$10,800</strong></td>
+                        <td><strong>$26,600</strong></td>
+                        <td><strong>$66,200</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- 11. ROADMAP -->
+    <section id="roadmap">
+        <h2>11. Roadmap de Implementación</h2>
+
+        <div style="margin-top: 24px;">
+            <div class="card" style="margin-bottom: 16px; border-left: 4px solid var(--accent);">
+                <h3>Fase 0 — Requisitos y Arquitectura (M1-M2) <span class="tech-tag">2 meses</span></h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Análisis de requisitos, diseño de arquitectura de 7 capas, selección tecnológica, plan de cumplimiento SECURITY-INDICATORS y OMNI-Lic. Hitos: Documento de Arquitectura aprobado, Plan de Cumplimiento validado.</p>
+            </div>
+            <div class="card" style="margin-bottom: 16px; border-left: 4px solid var(--green);">
+                <h3>Fase 1 — Núcleo de Ingesta y Análisis (M3-M6) <span class="tech-tag">4 meses</span></h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Integración KSMG + Postfix fallback, ClamAV, YARA, análisis OOXML/PDF, cola cifrada. Hitos: Gateway operativo, 3 motores offline funcionando, tests automatizados.</p>
+            </div>
+            <div class="card" style="margin-bottom: 16px; border-left: 4px solid var(--orange);">
+                <h3>Fase 2 — Fusión, Scoring y Cuarentena (M6-M9) <span class="tech-tag">3 meses</span></h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Motor de fusión multi-motor, scoring ponderado, cuarentena central con hash-chain HMAC, autoservicio de usuario. Hitos: Scoring operativo, cuarentena con trazabilidad.</p>
+            </div>
+            <div class="card" style="margin-bottom: 16px; border-left: 4px solid var(--accent2);">
+                <h3>Fase 3 — Dashboard y Reportes (M9-M12) <span class="tech-tag">3 meses</span></h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">3 vistas de dashboard, reportes CISO autogenerados, integración AD/LDAP, SIEM/CEF, Grafana/Prometheus. Hitos: Dashboard completo, primer reporte CISO.</p>
+            </div>
+            <div class="card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6;">
+                <h3>Fase 4 — Capa Offline + LIL (M12-M15) <span class="tech-tag">3 meses</span></h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">ML local ONNX/TFLite, sandbox air-gapped, LIL completo con OMNI-Lic, hardware binding, modo gracia. Hitos: ML offline operativo, LIL certificado.</p>
+            </div>
+            <div class="card" style="margin-bottom: 16px; border-left: 4px solid var(--red);">
+                <h3>Fase 5 — Pilotos en 3 Sectores (M15-M18) <span class="tech-tag">3 meses</span></h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin-top: 8px;">Piloto en banca, sanidad y administración pública. Validación de cumplimiento, métricas reales, ajustes. Hitos: 3 pilotos completados, certificaciones en proceso.</p>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer" style="margin-top: 40px;">
+    <div class="container">
+        <p><strong>Omni-CleanerMail</strong> — Plataforma de Purificación de Correo Empresarial</p>
+        <p style="margin-top: 8px;">Proyecto I+D+i · Soberanía de Datos · Air-Gapped Ready · ENS / ISO 27001 / NIS2</p>
+        <p style="margin-top: 16px; font-size: 0.8rem;">
+            Tarifa de referencia: $13.00 USD/hora · Proyecto total: $242,572.00 USD (18 meses, 12 roles, 11,040 horas)<br>
+            Estimación interna a validar con presupuestos reales de infraestructura y licencias.
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

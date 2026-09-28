@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omni-CleanerMail — Consola de gobierno del correo</title>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#0f172a;--card:#151f33;--card2:#1c2a44;--card3:#23334f;
+  --accent:#4c8dff;--accent2:#7aa8ff;--green:#22c55e;--emerald:#34d399;
+  --orange:#f59e0b;--red:#f43f5e;--purple:#a78bfa;--cyan:#22d3ee;
+  --text:#e6edf7;--muted:#8ea0bd;--border:#24334f;--danger-bg:#2a1220;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Segoe UI,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#314a75;border-radius:6px}
+a{color:var(--accent2)}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:24px;background:radial-gradient(1000px 500px at 80% 0%,rgba(76,141,255,.14),transparent),radial-gradient(800px 400px at 10% 100%,rgba(34,211,238,.08),transparent),var(--bg)}
+#login .brand-big{display:flex;flex-direction:column;align-items:center;gap:6px}
+#login .brand-big .logo{font-size:1.9rem;font-weight:800;letter-spacing:.5px;color:#fff}
+#login .brand-big .logo span{color:var(--accent2)}
+#login .brand-big .tag{color:var(--muted);font-size:.85rem}
+#login form{display:flex;flex-direction:column;gap:12px;width:340px;background:var(--card);padding:28px;border-radius:16px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#login label{font-size:.8rem;color:var(--muted)}
+#login input{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:10px;font-size:.95rem;outline:none}
+#login input:focus{border-color:var(--accent)}
+#login button{background:linear-gradient(135deg,var(--accent),#3b6fd4);border:none;color:#fff;padding:12px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.95rem;letter-spacing:.3px}
+#login button:hover{filter:brightness(1.1)}
+#login .hint{font-size:.72rem;color:var(--muted);text-align:center;margin-top:4px}
+#login .hint code{color:var(--accent2)}
+.err{color:var(--red);font-size:.82rem;min-height:16px}
+.hidden{display:none!important}
+#app{display:flex;min-height:100vh}
+#sidebar{width:236px;min-width:236px;background:var(--bg2);display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto}
+#sidebar .brand{padding:20px 18px 14px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--border)}
+#sidebar .brand .logo{font-weight:800;color:#fff;font-size:1.05rem}
+#sidebar .brand .logo span{color:var(--accent2)}
+#sidebar .brand .sub{font-size:.68rem;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+.navgroup{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:16px 18px 6px}
+#sidebar button.nav{display:flex;align-items:center;gap:10px;background:none;border:none;color:var(--muted);text-align:left;padding:9px 18px;font-size:.875rem;cursor:pointer;border-left:3px solid transparent;width:100%;font-family:inherit}
+#sidebar button.nav svg{width:16px;height:16px;flex:none;opacity:.8}
+#sidebar button.nav:hover{color:var(--text);background:var(--card)}
+#sidebar button.nav.active{color:var(--text);background:var(--card);border-left-color:var(--accent);font-weight:600}
+#sidebar .logout{margin:auto 14px 14px;background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:9px;border-radius:9px;cursor:pointer;font-family:inherit;font-size:.83rem}
+#sidebar .logout:hover{color:var(--red);border-color:var(--red)}
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#topbar{display:flex;align-items:center;gap:10px;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+#topbar .crumb{font-size:.85rem;color:var(--muted)}
+#topbar .crumb b{color:var(--text);font-weight:600}
+#topbar .spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:30px;font-size:.73rem;font-weight:600;border:1px solid var(--border);color:var(--muted);background:var(--card)}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.ok{color:var(--emerald);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+.pill.ok .dot{background:var(--green)}
+.pill.warn{color:var(--orange);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1)}
+.pill.warn .dot{background:var(--orange)}
+.pill.bad{color:var(--red);border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.1)}
+.pill.bad .dot{background:var(--red)}
+.pill.demo{color:var(--cyan);border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.08)}
+.pill.demo .dot{background:var(--cyan)}
+#content{flex:1;padding:26px 30px 40px;overflow:auto}
+.page-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.page-head h1{font-size:1.45rem;font-weight:700}
+.page-head .sub{color:var(--muted);font-size:.86rem;margin-top:3px}
+.page-head .actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 13px;border-radius:9px;font-weight:600;cursor:pointer;font-size:.82rem;font-family:inherit;transition:all .12s}
+.btn:hover{border-color:var(--accent);color:#fff;background:var(--card3)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#3b6fd4);border:none;color:#fff}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.green{border-color:rgba(52,211,153,.4);color:var(--emerald)}
+.btn.green:hover{background:rgba(52,211,153,.12);border-color:var(--emerald);color:#fff}
+.btn.small{padding:5px 9px;font-size:.74rem;border-radius:7px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.section-title{font-size:.8rem;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--accent);opacity:.7}
+.kpi.warn::after{background:var(--orange)}.kpi.bad::after{background:var(--red)}.kpi.good::after{background:var(--green)}.kpi.purple::after{background:var(--purple)}.kpi.cyan::after{background:var(--cyan)}
+.kpi .label{font-size:.73rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.kpi .value{font-size:1.9rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .meta{font-size:.72rem;color:var(--muted);margin-top:6px}
+.filterbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.filterbar input,.filterbar select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:.82rem;outline:none;font-family:inherit}
+.filterbar input:focus,.filterbar select:focus{border-color:var(--accent)}
+.filterbar input.search{min-width:180px;flex:1}
+.filterbar .ftag{font-size:.74rem;color:var(--muted)}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+thead th{background:var(--card2);padding:10px 13px;text-align:left;font-size:.72rem;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);position:sticky;top:0;white-space:nowrap}
+tbody td{padding:10px 13px;border-top:1px solid var(--border);vertical-align:middle}
+tbody tr:hover td{background:rgba(76,141,255,.05)}
+tr.empty td{color:var(--muted);text-align:center;padding:26px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.71rem;font-weight:700;white-space:nowrap}
+.badge.critica{background:rgba(244,63,94,.16);color:#fda4af}
+.badge.alta{background:rgba(245,158,11,.15);color:#fcd34d}
+.badge.media{background:rgba(167,139,250,.15);color:#ddd6fe}
+.badge.baja{background:rgba(34,211,238,.12);color:#a5f3fc}
+.badge.info{background:rgba(142,160,189,.15);color:#cbd5e1}
+.badge.nuevo{background:rgba(244,63,94,.16);color:#fda4af}
+.badge.en_revision{background:rgba(245,158,11,.15);color:#fcd34d}
+.badge.revisado{background:rgba(34,197,94,.14);color:#86efac}
+.badge.entrada{background:rgba(34,211,238,.12);color:#a5f3fc}
+.badge.salida{background:rgba(167,139,250,.14);color:#ddd6fe}
+.badge.interna{background:rgba(34,197,94,.14);color:#86efac}
+.badge.externa{background:rgba(244,63,94,.14);color:#fda4af}
+.badge.blocked{background:rgba(244,63,94,.18);color:#fda4af}
+.badge.quarantine{background:rgba(245,158,11,.16);color:#fcd34d}
+.badge.delivered{background:rgba(34,197,94,.14);color:#86efac}
+.badge.released{background:rgba(76,141,255,.16);color:#a5c8ff}
+.badge.expunged{background:rgba(148,163,184,.16);color:#cbd5e1}
+.mono{font-family:Consolas,Menlo,monospace;font-size:.76rem;color:#a5c8ff}
+.muted{color:var(--muted)}
+.small{font-size:.76rem}
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+@media(max-width:1000px){.two-col{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:14px}
+@media(max-width:1000px){.split{grid-template-columns:1fr}}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.8rem}
+.bar-row .lbl{width:150px;flex:none;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:9px;background:var(--card2);border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;transition:width .4s}
+.hlist{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.status-line{display:flex;align-items:center;gap:10px;padding:11px 15px;border-radius:11px;background:var(--card);border:1px solid var(--border);margin-bottom:16px;font-size:.84rem}
+.status-line .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.heat .cell{background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:12px 14px}
+.heat .cell b{font-size:.86rem}
+.tagbox{display:flex;flex-wrap:wrap;gap:6px}
+.tagbox .tag{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:20px;font-size:.72rem}
+.ops button{margin-right:5px}
+.pager{display:flex;gap:8px;align-items:center;margin-top:12px;color:var(--muted);font-size:.8rem}
+#toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:9px;z-index:99;max-width:360px}
+.toast{background:var(--card3);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:11px;padding:12px 15px;font-size:.83rem;box-shadow:0 12px 34px rgba(0,0,0,.45);animation:slide .25s ease}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+.toast.warn{border-left-color:var(--orange)}
+@keyframes slide{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+.loading{color:var(--muted);text-align:center;padding:30px}
+.link{cursor:pointer;color:var(--accent2);border-bottom:1px dotted var(--accent2);transition:color .12s}
+.link:hover{color:#fff;border-bottom-color:#fff}
+#linkbar{background:rgba(76,141,255,.06);border:1px solid rgba(76,141,255,.25);border-radius:11px;padding:10px 16px;margin-bottom:18px;font-size:.82rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#linkbar .chip{background:var(--card2);border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-size:.74rem}
+#linkbar .chip b{color:var(--accent2)}
+#linkbar button{margin-left:auto}
+#linkbar:empty{display:none}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="brand-big">
+    <div class="logo">Omni-<span>CleanerMail</span></div>
+    <div class="tag">Consola de purificación, hallazgos y reporte de correo</div>
+  </div>
+  <form onsubmit="doLogin(event)">
+    <label for="user">Usuario</label>
+    <input id="user" placeholder="admin" autocomplete="username">
+    <label for="pass">Contraseña</label>
+    <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <button type="submit">Acceder al sistema</button>
+  </form>
+  <div class="hint">Demo: <code>admin</code> / <code>admin123</code> · <code>operador</code> / <code>operador123</code></div>
+</div>
+
+<div id="app" class="hidden">
+  <nav id="sidebar">
+    <div class="brand">
+      <div class="logo">Omni-<span>CleanerMail</span></div>
+      <div class="sub">Gobierno del correo</div>
+    </div>
+    <div class="navgroup">Principal</div>
+    <button class="nav active" data-panel="hallazgos" onclick="nav('hallazgos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Hallazgos</button>
+    <button class="nav" data-panel="overview" onclick="nav('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Panel general</button>
+    <button class="nav" data-panel="direcciones" onclick="nav('direcciones')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/><path d="M4 20l6-6m10 6l-6-6"/></svg>Direcciones + informe</button>
+    <div class="navgroup">Operación</div>
+    <button class="nav" data-panel="quarantine" onclick="nav('quarantine')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Cuarentena</button>
+    <button class="nav" data-panel="engines" onclick="nav('engines')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.2 2.2m9.8 9.8l2.2 2.2M19.1 4.9l-2.2 2.2m-9.8 9.8l-2.2 2.2"/></svg>Motores</button>
+    <button class="nav" data-panel="ksmg" onclick="nav('ksmg')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>KSMG</button>
+    <button class="nav" data-panel="reportes" onclick="nav('reportes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M7 15l3-3 3 3 4-5M7 8h.01M17 10h.01"/></svg>Reportes</button>
+    <button class="nav" data-panel="deps" onclick="nav('deps')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Departamentos</button>
+    <div class="navgroup">Sistema</div>
+    <button class="nav" data-panel="license" onclick="nav('license')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Licencia</button>
+    <button class="nav" data-panel="audit" onclick="nav('audit')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/><path d="M12 8v4l3 3"/></svg>Auditoría</button>
+    <button class="nav" data-panel="apikeys" onclick="nav('apikeys')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15 7.5m2.5 2.5L20 7.5M20 7.5L21 6.5 18 3.5 15 6.5l2 2"/></svg>API Keys</button>
+    <button class="logout" onclick="doLogout()">Cerrar sesión</button>
+  </nav>
+
+  <div id="main">
+    <div id="topbar">
+      <span class="crumb" id="crumb">Principal · <b>Hallazgos</b></span>
+      <span class="spacer"></span>
+      <span class="pill" id="health-pill"><span class="dot"></span><span id="health-txt">comprobando…</span></span>
+      <span class="pill" id="lic-pill"><span class="dot"></span><span id="lic-txt">licencia…</span></span>
+      <button class="btn small" onclick="refreshAll()">Actualizar todo</button>
+    </div>
+    <div id="content">
+      <div id="linkbar"></div>
+
+      <section id="panel-hallazgos">
+        <div class="page-head"><div><h1>Dashboard de hallazgos</h1><div class="sub">Análisis multi-motor con severidad y navegación cruzada a cuarentena y motores</div></div>
+          <div class="actions">
+            <button class="btn green small" onclick="ingestDemo('ENTRADA')">+ Correo entrante</button>
+            <button class="btn green small" onclick="ingestDemo('SALIDA')">+ Correo saliente</button>
+            <button class="btn primary small" onclick="exportReport('/api/report/findings.csv?'+findingsQuery(),'informe_hallazgos.csv')">CSV</button>
+            <button class="btn primary small" onclick="exportReport('/api/report/findings.json?'+findingsQuery(),'informe_hallazgos.json')">JSON</button>
+          </div>
+        </div>
+        <div id="findings-kpis"><div class="loading">Cargando…</div></div>
+        <div class="filterbar">
+          <span class="ftag">Filtros</span>
+          <select id="f-sev" onchange="loadFindings()"><option value="">Todas las severidades</option><option>CRITICA</option><option>ALTA</option><option>MEDIA</option><option>BAJA</option><option>INFO</option></select>
+          <select id="f-tipo" onchange="loadFindings()"><option value="">Todos los tipos</option><option>MENSAJE_BLOQUEADO</option><option>MENSAJE_CUARENTENA</option><option>AUTENTICACION_CORREO</option><option>FIRMA_MALICIOSA</option><option>REGLA_YARA</option><option>SANDBOX</option><option>PHISHING_ML</option><option>ADJUNTO_PELIGROSO</option></select>
+          <select id="f-status" onchange="loadFindings()"><option value="">Todos los estados</option><option>NUEVO</option><option>EN_REVISION</option><option>REVISADO</option></select>
+          <input class="search" id="f-search" placeholder="Buscar…" oninput="debouncedFindings()">
+        </div>
+        <div class="table-wrap"><div id="findings-table"><div class="loading">Cargando…</div></div></div>
+      </section>
+
+      <section id="panel-overview" class="hidden">
+        <div class="page-head"><div><h1>Panel general</h1><div class="sub">Postura de amenazas: volumen, bloqueo, hallazgos y riesgo</div></div></div>
+        <div id="overview-load"><div class="loading">Cargando…</div></div>
+      </section>
+
+      <section id="panel-direcciones" class="hidden">
+        <div class="page-head"><div><h1>Direcciones de correo (entrada y salida)</h1><div class="sub">Ledger completo con enlaces cruzados a cuarentena y hallazgos</div></div>
+          <div class="actions">
+            <button class="btn green small" onclick="ingestDemo('ENTRADA')">+ Entrante</button>
+            <button class="btn green small" onclick="ingestDemo('SALIDA')">+ Saliente</button>
+            <button class="btn primary small" onclick="exportReport('/api/report/addresses.csv?'+addrQuery(),'informe_direcciones.csv')">CSV</button>
+            <button class="btn primary small" onclick="exportReport('/api/report/addresses.json?'+addrQuery(),'informe_direcciones.json')">JSON</button>
+          </div>
+        </div>
+        <div id="addr-kpis"><div class="loading">Cargando…</div></div>
+        <div class="filterbar">
+          <span class="ftag">Filtros</span>
+          <select id="a-dir" onchange="loadAddresses()"><option value="">Entrada y salida</option><option>ENTRADA</option><option>SALIDA</option></select>
+          <select id="a-role" onchange="loadAddresses()"><option value="">Todos los roles</option><option>REMITENTE</option><option>DESTINATARIO</option></select>
+          <select id="a-int" onchange="loadAddresses()"><option value="">Internas y externas</option><option value="1">Internas</option><option value="0">Externas</option></select>
+          <select id="a-verdict" onchange="loadAddresses()"><option value="">Todos los veredictos</option><option>deliver</option><option>quarantine</option><option>block</option></select>
+          <input class="search" id="a-search" placeholder="Buscar dirección…" oninput="debouncedAddr()">
+        </div>
+        <div class="table-wrap"><div id="addr-table"><div class="loading">Cargando…</div></div></div>
+      </section>
+
+      <section id="panel-quarantine" class="hidden">
+        <div class="page-head"><div><h1>Cuarentena y purificación</h1><div class="sub">Mensajes retenidos con veredictos multi-motor, enlaces a direcciones y hallazgos</div></div>
+          <div class="actions"><button class="btn green small" onclick="ingestDemo('ENTRADA')">+ Correo demo</button></div>
+        </div>
+        <div id="quarantine-kpis"></div>
+        <div class="hlist" id="quarantine-tabs"></div>
+        <div class="filterbar">
+          <span class="ftag">Filtros</span>
+          <input class="search" id="q-search" placeholder="Buscar asunto, remitente o destinatario…" oninput="debouncedQuarantine()">
+        </div>
+        <div class="table-wrap"><div id="quarantine-load"><div class="loading">Cargando…</div></div></div>
+      </section>
+
+      <section id="panel-engines" class="hidden">
+        <div class="page-head"><div><h1>Motores de análisis</h1><div class="sub">Cobertura y efectividad multi-motor, enlace directo a hallazgos por motor</div></div></div>
+        <div id="engines-load"><div class="loading">Cargando…</div></div>
+      </section>
+
+      <section id="panel-ksmg" class="hidden">
+        <div class="page-head"><div><h1>Integración Kaspersky Secure Mail Gateway (KSMG)</h1><div class="sub">Conectores reales (directorio .eml, IMAP, receptor SMTP). El motor KSMG usa la evidencia real del gateway; en modo simulado avisa al analista</div></div>
+          <div class="actions">
+            <button class="btn primary small" onclick="saveKsmgConfig()">Guardar</button>
+            <button class="btn small" onclick="testKsmg()">Probar</button>
+            <button class="btn small" onclick="pollKsmg()">Purgar ahora</button>
+            <button class="btn green small" id="ksmg-toggle" onclick="toggleKsmg()">Iniciar poller</button>
+          </div>
+        </div>
+        <div id="ksmg-banner" class="status-line hidden"><span class="dot" id="ksmg-dot"></span><span id="ksmg-msg"></span><span class="spacer" style="flex:1"></span><span class="pill" id="ksmg-mode"></span></div>
+        <div id="ksmg-kpis"><div class="loading">Cargando…</div></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title">Configuración del conector</div>
+            <div class="filterbar" style="flex-direction:column;align-items:stretch">
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <select id="k-modo" style="flex:1;min-width:170px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                  <option value="SIMULADO">SIMULADO (sin gateway real)</option>
+                  <option value="EML_WATCH">EML_WATCH · vigilancia de carpeta</option>
+                  <option value="IMAP">IMAP · buzón de KSMG</option>
+                  <option value="SMTP">SMTP · receptor al que KSMG reenvía</option>
+                </select>
+                <input id="k-poll" type="number" min="5" placeholder="poll (s)" style="width:90px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem"><input type="checkbox" id="k-auto" style="accent-color:var(--accent)"> auto-arranque</label>
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <input id="k-host" placeholder="host IMAP de KSMG" style="flex:1;min-width:160px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <input id="k-port" type="number" placeholder="puerto" style="width:90px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem"><input type="checkbox" id="k-ssl" style="accent-color:var(--accent)"> SSL</label>
+                <input id="k-folder" placeholder="carpeta IMAP (INBOX)" style="width:150px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <input id="k-user" placeholder="usuario IMAP" style="flex:1;min-width:140px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <input id="k-pass" type="password" placeholder="contraseña (solo si cambia)" style="flex:1;min-width:140px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <input id="k-watch" placeholder="ruta carpeta de vigilancia (.eml)" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px;font-family:Consolas,monospace;font-size:.78rem">
+                <input id="k-smtpbind" placeholder="bind SMTP" style="width:130px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px;font-family:Consolas,monospace;font-size:.78rem">
+                <input id="k-smtpport" type="number" placeholder="puerto SMTP" style="width:110px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              </div>
+              <p class="small muted" style="margin-top:2px">Pista: deje <b>EML_WATCH</b> apuntando a una carpeta donde KSMG exporta .eml (sidecar <span class="mono">nombre.eml.json</span> con veredictos). En <b>SMTP</b>, configure KSMG para reenviar el tráfico a este receptor.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Eventos de ingesta KSMG</div>
+            <div class="table-wrap"><div id="ksmg-events"><div class="loading">Cargando…</div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-reportes" class="hidden">
+        <div class="page-head"><div><h1>Reportes por buzón</h1><div class="sub">Informes personalizados por buzón/usuario: entrantes/salientes, cantidad de buzones y hallazgos · envío por email on-demand y programado (DIARIO/SEMANAL)</div></div>
+          <div class="actions">
+            <button class="btn primary small" onclick="saveReporteConfig()">Guardar config</button>
+            <button class="btn small" onclick="previewReporte()">Ver informe</button>
+            <button class="btn green small" onclick="sendReporteAhora()">Enviar ahora</button>
+            <button class="btn small" onclick="runReportesProgramados()">Ejecutar programados</button>
+          </div>
+        </div>
+        <div id="reporte-banner" class="status-line hidden"><span class="dot" id="reporte-dot"></span><span id="reporte-msg"></span><span class="spacer" style="flex:1"></span><span class="pill" id="reporte-smtp"></span></div>
+        <div id="reporte-kpis"><div class="loading">Cargando…</div></div>
+        <datalist id="r-buzones"></datalist>
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title">Configuración programada</div>
+            <div class="filterbar" style="flex-direction:column;align-items:stretch">
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem"><input type="checkbox" id="r-todo" onchange="rTodoToggle()" style="accent-color:var(--accent)"> toda la organización (*)</label>
+                <input id="r-buzon" list="r-buzones" placeholder="buzón/usuario (p. ej. usuario1@corp.demo)" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <input id="r-email" placeholder="email destino del informe" style="flex:1;min-width:200px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <select id="r-freq" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                  <option value="DIARIO">DIARIO</option>
+                  <option value="SEMANAL">SEMANAL (lunes)</option>
+                </select>
+                <input id="r-hora" type="time" value="08:00" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <input id="r-days" type="number" min="1" max="90" value="7" title="días del periodo" style="width:90px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+                <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem"><input type="checkbox" id="r-activo" checked style="accent-color:var(--accent)"> activo</label>
+              </div>
+              <p class="small muted" style="margin-top:2px">El periodo se toma en días del campo <b>días</b> (por defecto 7). Configure el servidor SMTP en la tarjeta <b>SMTP de salida</b> (o con <span class="mono">LOOK_SMTP_*</span>).</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Informe del buzón (vista previa)</div>
+            <div id="reporte-preview"><span class="muted small">Seleccione un buzón y pulse <b>Ver informe</b> para previsualizar el resumen que se enviará por email.</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">SMTP de salida <span id="r-smtp-state" class="pill" style="margin-left:6px"></span></div>
+          <div class="filterbar" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <input id="r-smtp-host" placeholder="host SMTP (p. ej. smtp.omni.group)" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              <input id="r-smtp-port" type="number" placeholder="587" style="width:100px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+            </div>
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <input id="r-smtp-from" placeholder="remitente (From)" style="flex:1;min-width:200px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              <input id="r-smtp-user" placeholder="usuario SMTP (opcional)" style="flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+              <input id="r-smtp-pass" type="password" placeholder="contraseña (opcional)" style="flex:1;min-width:160px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+            </div>
+            <div class="actions" style="margin-top:2px">
+              <button class="btn primary small" onclick="saveReporteSmtp()">Guardar SMTP</button>
+              <button class="btn small" onclick="testReporteSmtp()">Probar SMTP</button>
+            </div>
+            <p class="small muted" style="margin-top:2px">Puerto <b>587</b> usa STARTTLS. La contraseña guardada no se muestra de nuevo (déjala vacía para conservarla).</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">Programaciones activas</div>
+          <div class="table-wrap"><div id="reporte-configs"><div class="loading">Cargando…</div></div></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Historial de envíos</div>
+          <div class="table-wrap"><div id="reporte-historial"></div></div>
+        </div>
+      </section>
+
+      <section id="panel-deps" class="hidden">
+        <div class="page-head"><div><h1>Departamentos</h1><div class="sub">Scoring de riesgo por dominio, enlace a cuarentena y direcciones por departamento</div></div></div>
+        <div class="hlist" id="dept-selector"></div>
+        <div id="dept-load"><div class="loading">Cargando…</div></div>
+      </section>
+
+      <section id="panel-license" class="hidden">
+        <div class="page-head"><div><h1>Licencia OMNI-Lic</h1><div class="sub">Estado de la licencia con enlace a eventos de auditoría</div></div></div>
+        <div id="license-banner" class="status-line hidden"><span class="dot" id="license-dot"></span><span id="license-msg"></span></div>
+        <div class="split">
+          <div><div id="license-load"><div class="loading">Cargando…</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="section-title">Generar solicitud</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <input id="lic-client" placeholder="Cliente" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:9px">
+                <input id="lic-email" placeholder="Email" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:9px">
+                <select id="lic-tipo" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:9px"><option value="trial">trial</option><option value="hosting">hosting</option><option value="enterprise" selected>enterprise</option></select>
+                <button class="btn primary" onclick="genRequest()">Generar solicitud</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-title">Cargar licencia emitida</div>
+              <p class="small muted" style="margin:6px 0 10px">Cargue el <span class="mono">license.json</span> emitido por OMNI-Lic.</p>
+              <input type="file" id="lic-file" accept=".json,.lic,.license" style="color:var(--muted)">
+              <button class="btn primary" style="margin-top:10px" onclick="installLicense()">Activar licencia</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-audit" class="hidden">
+        <div class="page-head"><div><h1>Auditoría hash-chain</h1><div class="sub">Registro append-only con verificación HMAC-SHA256</div></div></div>
+        <div class="kpis" id="audit-kpis"></div>
+        <div class="filterbar">
+          <span class="ftag">Filtros</span>
+          <select id="au-action" onchange="loadAudit()"><option value="">Todas las acciones</option>
+            <option value="login_success">login_success</option><option value="login_failed">login_failed</option>
+            <option value="mail_ingested">mail_ingested</option><option value="ksmg_config">ksmg_config</option>
+            <option value="findings_status">findings_status</option>
+            <option value="release_message">release_message</option><option value="expunge_message">expunge_message</option>
+            <option value="api_key_created">api_key_created</option><option value="api_key_revoked">api_key_revoked</option>
+            <option value="license_install">license_install</option><option value="license_expiring">license_expiring</option>
+            <option value="license_heartbeat">license_heartbeat</option><option value="license_violation">license_violation</option>
+          </select>
+          <input class="search" id="au-actor" placeholder="Filtrar por actor…" oninput="debouncedAudit()">
+        </div>
+        <div class="table-wrap"><div id="audit-load"><div class="loading">Cargando…</div></div></div>
+      </section>
+
+      <section id="panel-apikeys" class="hidden">
+        <div class="page-head"><div><h1>API Keys</h1><div class="sub">Claves M2M con RBAC, hash SHA-256 en reposo · con alcance de buzón para auto-reporte (<span class="mono">/api/reporte-buzon/mio</span>)</div></div></div>
+        <div id="apikey-kpis"></div>
+        <div class="filterbar">
+          <span class="ftag">Nueva clave</span>
+          <input id="ek-label" placeholder="etiqueta" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+          <select id="ek-role" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px"><option>OPERATOR</option><option>ADMIN</option><option>AUDITOR</option><option>USER</option></select>
+          <input id="ek-buzon" list="r-buzones" placeholder="buzón (opcional, M2M)" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:9px">
+          <button class="btn primary" onclick="createKey()">Crear</button>
+        </div>
+        <div class="table-wrap"><div id="keys-load"><div class="loading">Cargando…</div></div></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const API='';let TOKEN=localStorage.getItem('ocm_token'),ROLE=localStorage.getItem('ocm_role'),QUARANTINE_TAB='';
+let ATTACH={},ATTACH_ORIGIN={};
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(msg,type='ok'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;document.getElementById('toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),350);},3900);}
+function fmtDate(iso){if(!iso)return'-';const d=new Date(iso);if(isNaN(d))return esc(iso);return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+function debounce(fn,ms=350){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+const debouncedFindings=debounce(loadFindings),debouncedAddr=debounce(loadAddresses),debouncedQuarantine=debounce(loadQuarantine),debouncedAudit=debounce(loadAudit),debouncedKeys=debounce(loadKeys);
+const TIPO_LABEL={MENSAJE_BLOQUEADO:'Bloqueado',MENSAJE_CUARENTENA:'Cuarentena',AUTENTICACION_CORREO:'Autenticación',FIRMA_MALICIOSA:'Firma maliciosa',REGLA_YARA:'Regla YARA',SANDBOX:'Sandbox',PHISHING_ML:'Phishing ML',ADJUNTO_PELIGROSO:'Adjunto peligroso'};
+
+async function api(path,opts={}){const h=Object.assign({'Content-Type':'application/json'},opts.headers||{});if(TOKEN)h['Authorization']='Bearer '+TOKEN;const r=await fetch(API+path,Object.assign({},opts,{headers:h}));let data;try{data=await r.json();}catch(e){data=await r.text();}if(r.status===401){doLogout();throw new Error('Sesión expirada');}if(r.status===426){toast(String(data&&data.detail||'Licencia requerida'),'err');throw new Error('Licencia requerida');}if(!r.ok)throw new Error(typeof data==='string'?data:(data&&data.detail||('Error '+r.status)));return data;}
+async function exportReport(path,filename){try{const r=await fetch(API+path,{headers:{Authorization:'Bearer '+TOKEN}});if(!r.ok){let d;try{d=await r.json();}catch(e){}toast(d&&d.detail||'No se pudo exportar','err');return;}const blob=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Exportado: '+filename);}catch(e){toast('Error: '+e.message,'err');}}
+
+/* ---- CROSS-LINK ---- */
+function openLinked(panel,params,origin){ATTACH[panel]=params;ATTACH_ORIGIN[panel]=origin;renderLinkBar();nav(panel);}
+function clearLinks(panel){if(panel){delete ATTACH[panel];delete ATTACH_ORIGIN[panel];}else{ATTACH={};ATTACH_ORIGIN={};}renderLinkBar();const n=document.querySelector('#sidebar button.nav.active')?.dataset.panel;if(n)nav(n);}
+function renderLinkBar(){const n=document.querySelector('#sidebar button.nav.active')?.dataset.panel;const bar=document.getElementById('linkbar');const att=ATTACH[n],ori=ATTACH_ORIGIN[n];if(!att||!ori){bar.innerHTML='';return;}bar.innerHTML=`<span>🔗</span><span>Vinculado desde <b>${esc(ori)}</b></span>${Object.entries(att).map(([k,v])=>`<span class="chip">${esc(k)}: <b>${esc(v)}</b></span>`).join('')}<button class="btn small" onclick="clearLinks()">Limpiar vínculo ×</button>`;}
+
+/* ---- AUTH ---- */
+function doLogin(e){e.preventDefault();const user=document.getElementById('user').value,pass=document.getElementById('pass').value;document.getElementById('loginErr').textContent='';fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})}).then(r=>r.json()).then(d=>{if(d.access_token){TOKEN=d.access_token;ROLE=d.role;localStorage.setItem('ocm_token',TOKEN);localStorage.setItem('ocm_role',ROLE);document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');initApp();}else{document.getElementById('loginErr').textContent=d.detail||'Error de acceso';}}).catch(()=>{document.getElementById('loginErr').textContent='Error de red';});}
+function doLogout(){fetch(API+'/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN}}).catch(()=>{});TOKEN=null;ROLE=null;localStorage.removeItem('ocm_token');localStorage.removeItem('ocm_role');location.reload();}
+
+/* ---- NAV ---- */
+const CRUMBS={hallazgos:'Principal · Hallazgos',overview:'Principal · Panel general',direcciones:'Principal · Direcciones + informe',quarantine:'Operación · Cuarentena',engines:'Operación · Motores',ksmg:'Operación · KSMG',reportes:'Operación · Reportes por buzón',deps:'Operación · Departamentos',license:'Sistema · Licencia',audit:'Sistema · Auditoría',apikeys:'Sistema · API Keys'};
+function nav(name){document.querySelectorAll('#sidebar button.nav').forEach(b=>b.classList.toggle('active',b.dataset.panel===name));document.querySelectorAll('#content > section').forEach(s=>s.classList.add('hidden'));document.getElementById('panel-'+name).classList.remove('hidden');document.getElementById('crumb').innerHTML=CRUMBS[name]||name;renderLinkBar();({hallazgos:loadFindingsPanel,overview:loadOverview,direcciones:loadAddressPanel,quarantine:loadQuarantinePanel,engines:loadEngines,ksmg:loadKsmgPanel,reportes:loadReportePanel,deps:loadDepts,license:loadLicense,audit:loadAudit,apikeys:loadKeys}[name])();}
+function refreshAll(){const n=document.querySelector('#sidebar button.nav.active')?.dataset.panel;if(n)nav(n);toast('Actualizado');}
+
+/* ---- INIT ---- */
+async function initApp(){try{const b=await api('/api/boot');const p=document.getElementById('lic-pill'),t=document.getElementById('lic-txt');if(b.estado==='DEMO'){p.className='pill demo';t.textContent='Demo · sin licencia';}else if(b.allowed){p.className='pill ok';t.textContent='Licencia vigente';}else{p.className='pill bad';t.textContent='Sin licencia';}}catch(e){}const h=await api('/api/health').catch(()=>null);const hp=document.getElementById('health-pill'),ht=document.getElementById('health-txt');if(h&&h.status==='ok'){hp.className='pill ok';ht.textContent='Operativo';setInterval(()=>{api('/api/health').catch(()=>{hp.className='pill bad';ht.textContent='Sin respuesta';});},30000);}loadFindingsPanel();}
+
+/* ==== HALLAZGOS ==== */
+function findingsQuery(){const p=new URLSearchParams();for(const[k,id]of[['severidad','f-sev'],['tipo','f-tipo'],['status','f-status'],['search','f-search']]){const v=document.getElementById(id)?.value;if(v)p.set(k,v);}const att=ATTACH.hallazgos;if(att)for(const[k,v]of Object.entries(att))if(v)p.set(k,v);return p.toString();}
+async function loadFindingsPanel(){loadHallazgosKpis();loadFindings();}
+async function loadFindings(){const el=document.getElementById('findings-table');try{const d=await api('/api/findings?'+findingsQuery()+'&limit=400');const rows=d.hallazgos||[];if(!rows.length){el.innerHTML='<table><tbody><tr class="empty"><td>No hay hallazgos con estos filtros.</td></tr></tbody></table>';return;}el.innerHTML=`<table><thead><tr><th>Severidad</th><th>Tipo</th><th>Título</th><th>Msg ID</th><th>Motor</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows.map(f=>`<tr><td><span class="badge ${f.severidad.toLowerCase()}">${f.severidad}</span></td><td class="muted small">${esc(TIPO_LABEL[f.tipo]||f.tipo)}</td><td><b>${esc(f.titulo)}</b><div class="small muted">${esc((f.detalle||'').slice(0,80))}</div></td><td><span class="link" onclick="openLinked('quarantine',{msg_id:'${esc(f.msg_id)}'},'Hallazgo #${f.id}')" title="Ver mensaje en cuarentena">${esc(f.msg_id)}</span></td><td><span class="link" onclick="openLinked('hallazgos',{source:'${esc(f.source)}'},'Motor ${esc(f.source)}')">${esc(f.source)}</span></td><td><span class="badge ${f.status.toLowerCase()}">${esc(f.status)}</span></td><td class="ops">${f.status!=='REVISADO'?`<button class="btn small" onclick="setFindingStatus(${f.id},'REVISADO')">Revisado</button>`:'<span class="muted small">—</span>'}</td></tr>`).join('')}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+async function loadHallazgosKpis(){const el=document.getElementById('findings-kpis');try{const s=await api('/api/findings/summary');const by=s.por_severidad||{};el.innerHTML=`<div class="kpis"><div class="kpi ${s.criticos?'bad':'good'}"><div class="label">Total hallazgos</div><div class="value">${s.total||0}</div><div class="meta">nuevos: ${s.nuevos||0}</div></div><div class="kpi bad"><div class="label">Críticos</div><div class="value">${by.CRITICA||0}</div></div><div class="kpi warn"><div class="label">Altos</div><div class="value">${by.ALTA||0}</div></div><div class="kpi cyan"><div class="label">Índice riesgo</div><div class="value">${s.indice_riesgo||0}</div></div></div><div class="split" style="margin-bottom:16px"><div class="card"><div class="section-title">Por motor / origen</div>${(s.top_motores||[]).map(m=>{const mx=Math.max(1,(s.top_motores[0]?.hallazgos||1));return`<div class="bar-row"><span class="link lbl" onclick="openLinked('hallazgos',{source:'${esc(m.motor)}'},'Motor')" style="text-decoration:underline">${esc(m.motor)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(m.hallazgos/mx*100)}%;background:var(--accent)"></div></div><span class="mono">${m.hallazgos}</span></div>`;}).join('')||'<span class="muted small">Sin datos</span>'}</div><div class="card"><div class="section-title">Tipos</div><div class="tagbox">${Object.entries(s.por_tipo||{}).map(([t,c])=>`<span class="tag">${esc(TIPO_LABEL[t]||t)} · ${c}</span>`).join('')||'—'}</div></div></div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+async function setFindingStatus(id,status){try{await api('/api/findings/'+id+'/status',{method:'POST',body:JSON.stringify({status})});toast('Marcado como '+status);loadHallazgosKpis();loadFindings();}catch(e){toast('Error: '+e.message,'err');}}
+
+/* ==== PANEL GENERAL ==== */
+async function loadOverview(){const el=document.getElementById('overview-load');try{const d=await api('/api/dashboard/overview');const t=d.totales;el.innerHTML=`<div class="kpis"><div class="kpi cyan"><div class="label">Procesados</div><div class="value">${t.mensajes}</div></div><div class="kpi ${d.tasa_bloqueo>30?'warn':'good'}"><div class="label">Tasa bloqueo</div><div class="value">${d.tasa_bloqueo}%</div></div><div class="kpi ${d.indice_riesgo_org>50?'bad':'warn'}"><div class="label">Riesgo org.</div><div class="value">${d.indice_riesgo_org}</div></div><div class="kpi ${d.hallazgos.criticos?'bad':'good'}"><div class="label">Críticos</div><div class="value">${d.hallazgos.criticos}</div></div><div class="kpi warn"><div class="label">Cuarentena</div><div class="value">${t.cuarentena}</div></div><div class="kpi bad"><div class="label">Bloqueados</div><div class="value">${t.bloqueados}</div></div></div><div class="two-col"><div class="card"><div class="section-title">Mapa de calor por departamento</div><div class="heat">${(d.mapa_calor_departamento||[]).map(h=>`<div class="cell"><div style="display:flex;justify-content:space-between"><b class="link" onclick="openLinked('quarantine',{search:'@${esc(h.departamento)}'.toLowerCase()},'Departamento ${esc(h.departamento)}')">${esc(h.departamento)}</b><span class="mono">${h.mensajes}</span></div><div class="bar-track" style="margin:8px 0 4px"><div class="bar-fill" style="width:${Math.min(100,h.media_score)}%;background:${h.media_score>60?'var(--red)':h.media_score>35?'var(--orange)':'var(--green)'}"></div></div><span class="small muted">media ${h.media_score}</span></div>`).join('')||'<span class="muted small">Sin datos</span>'}</div><div class="card"><div class="section-title">Top usuarios de riesgo</div><table><thead><tr><th>Usuario</th><th>URI</th></tr></thead><tbody>${d.top_usuarios_riesgo.map(u=>`<tr><td><span class="link mono" onclick="openLinked('direcciones',{search:'${esc(u.usuario)}'},'Usuario')">${esc(u.usuario)}</span></td><td><span class="badge ${u.uri>60?'blocked':''}">${u.uri}</span></td></tr>`).join('')||'<tr class="empty"><td colspan="2">—</td></tr>'}</tbody></table></div></div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== DIRECCIONES ==== */
+function addrQuery(){const p=new URLSearchParams();for(const[k,id,empty]of[['direction','a-dir',''],['role','a-role',''],['internal','a-int',''],['verdict','a-verdict',''],['search','a-search','']]){const v=document.getElementById(id)?.value;if(v&&v!==empty)p.set(k,v);}const att=ATTACH.direcciones;if(att)for(const[k,v]of Object.entries(att))if(v)p.set(k,v);return p.toString();}
+async function loadAddressPanel(){loadAddrKpis();loadAddresses();}
+async function loadAddrKpis(){const el=document.getElementById('addr-kpis');try{const s=await api('/api/addresses/summary');el.innerHTML=`<div class="kpis"><div class="kpi cyan"><div class="label">Registros</div><div class="value">${s.total_registros||0}</div></div><div class="kpi"><div class="label">Entrantes</div><div class="value">${s.direcciones_entrantes||0}</div></div><div class="kpi purple"><div class="label">Salientes</div><div class="value">${s.direcciones_salientes||0}</div></div><div class="kpi good"><div class="label">Internas</div><div class="value">${s.direcciones_internas||0}</div></div><div class="kpi warn"><div class="label">Externas</div><div class="value">${s.direcciones_externas||0}</div></div></div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+async function loadAddresses(){const el=document.getElementById('addr-table');try{const d=await api('/api/addresses?'+addrQuery()+'&limit=500');const rows=d.registros||[];if(!rows.length){el.innerHTML='<table><tbody><tr class="empty"><td>Sin registros con estos filtros.</td></tr></tbody></table>';return;}el.innerHTML=`<table><thead><tr><th>Dirección</th><th>Flujo</th><th>Rol</th><th>Tipo</th><th>Dominio</th><th>Asunto</th><th>Veredicto</th><th>Score</th><th>Msg ID</th></tr></thead><tbody>${rows.map(r=>`<tr><td><span class="link mono" onclick="openLinked('direcciones',{search:'${esc(r.address)}'},'Dirección')">${esc(r.address)}</span></td><td><span class="badge ${r.direction==='SALIDA'?'salida':'entrada'}">${esc(r.direction)}</span></td><td class="muted">${r.role==='REMITENTE'?'Remitente':'Dest.'}</td><td><span class="badge ${r.is_internal?'interna':'externa'}">${r.is_internal?'Interna':'Externa'}</span></td><td class="link small" onclick="openLinked('direcciones',{search:'${esc(r.domain)}'},'Dominio')">${esc(r.domain)}</td><td class="small">${esc((r.subject||'').slice(0,38))}</td><td><span class="badge ${r.verdict}">${r.verdict==='deliver'?'Entregado':r.verdict==='quarantine'?'Cuarentena':'Bloqueado'}</span></td><td class="mono">${r.score}</td><td><span class="link mono" onclick="openLinked('quarantine',{msg_id:'${esc(r.msg_id)}'},'Dirección')" title="Ver mensaje en cuarentena">${esc(r.msg_id)}</span></td></tr>`).join('')}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== CUARENTENA ==== */
+async function loadQuarantinePanel(){loadQuarantineKpis();loadQuarantine();}
+async function loadQuarantineKpis(){const el=document.getElementById('quarantine-kpis');try{const s=await api('/api/quarantine/summary');el.innerHTML=`<div class="kpis"><div class="kpi"><div class="label">Total</div><div class="value">${s.total}</div></div><div class="kpi warn"><div class="label">En cuarentena</div><div class="value">${s.en_cuarentena}</div></div><div class="kpi bad"><div class="label">Bloqueados</div><div class="value">${s.bloqueados}</div></div><div class="kpi"><div class="label">Entregados</div><div class="value">${s.entregados}</div></div><div class="kpi"><div class="label">Liberados</div><div class="value">${s.liberados}</div></div><div class="kpi bad"><div class="label">Riesgo alto</div><div class="value">${s.riesgo_alto}</div><div class="meta">score ≥ 80</div></div><div class="kpi purple"><div class="label">Score medio</div><div class="value">${s.score_medio}</div><div class="meta">máx: ${s.score_max}</div></div></div>`;}catch(e){el.innerHTML='';}}
+async function loadQuarantine(forceStatus){if(forceStatus!==undefined)QUARANTINE_TAB=forceStatus;const tabs=document.getElementById('quarantine-tabs');tabs.innerHTML='';[['','Todas'],['quarantine','Cuarentena'],['blocked','Bloqueados'],['released','Liberados'],['expunged','Purgados']].forEach(([v,l])=>{const b=document.createElement('button');b.className='btn small'+(QUARANTINE_TAB===v?' primary':'');b.textContent=l;b.onclick=()=>{QUARANTINE_TAB=v;loadQuarantine();};tabs.appendChild(b);});const el=document.getElementById('quarantine-load');el.innerHTML='<div class="loading">Cargando…</div>';try{const s=document.getElementById('q-search').value;const params=new URLSearchParams();if(QUARANTINE_TAB)params.set('status',QUARANTINE_TAB);if(s)params.set('search',s);const att=ATTACH.quarantine;if(att)for(const[k,v]of Object.entries(att))if(v)params.set(k,v);const d=await api('/api/quarantine?'+params);const msgs=d.mensajes||[];if(!msgs.length){el.innerHTML='<table><tbody><tr class="empty"><td>Sin mensajes.</td></tr></tbody></table>';return;}el.innerHTML=`<table><thead><tr><th>Msg ID</th><th>Asunto</th><th>Remitente</th><th>Destinatarios</th><th>Score</th><th>Veredicto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${msgs.map(m=>{const v=m.vote,cls=v==='block'?'blocked':v==='quarantine'?'quarantine':(m.status==='released'?'released':'delivered');const recips=(()=>{try{return JSON.parse(m.recipients||'[]');}catch(e){return[];}})();return`<tr><td><span class="link mono" onclick="openLinked('hallazgos',{msg_id:'${esc(m.msg_id)}'},'Cuarentena')" title="Ver hallazgos">${esc(m.msg_id)}</span></td><td class="small"><b>${esc(m.subject||'(sin asunto)')}</b></td><td><span class="link mono small" onclick="openLinked('direcciones',{search:'${esc(m.sender)}'},'Cuarentena')">${esc(m.sender)}</span></td><td class="small muted">${recips.map(r=>`<span class="link" onclick="openLinked('direcciones',{search:'${esc(r)}'},'Cuarentena')">${esc(r)}</span>`).join(', ').slice(0,50)}</td><td class="mono"><b>${m.composite_score}</b></td><td><span class="badge ${cls}">${v==='deliver'?'Entregado':esc(v)}</span></td><td><span class="badge ${m.status}">${esc(m.status)}</span></td><td class="ops">${['quarantine','blocked'].includes(m.status)?`<button class="btn small green" onclick="release('${esc(m.msg_id)}')">Liberar</button><button class="btn small" onclick="expunge('${esc(m.msg_id)}')">Purgar</button>`:'<span class="muted small">—</span>'}</td></tr>`;}).join('')}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+async function release(id){await api('/api/quarantine/'+id+'/release',{method:'POST',body:'{}'});toast('Liberado');loadQuarantineKpis();loadQuarantine();}
+async function expunge(id){await api('/api/quarantine/'+id+'/expunge',{method:'POST',body:'{}'});toast('Purgado');loadQuarantineKpis();loadQuarantine();}
+
+/* ==== MOTORES ==== */
+async function loadEngines(){const el=document.getElementById('engines-load');try{const d=await api('/api/dashboard/engines');const ksmg=d.fuente_ksmg||{};const ksmgBadge=ksmg.modo?`<span class="badge ${ksmg.conectado?'delivered':(ksmg.real?'quarantine':'info')}" title="Modo: ${esc(ksmg.modo)}" style="margin-left:6px">${ksmg.conectado?'KSMG real':(ksmg.real?'KSMG sin conexión':'KSMG simulado')}</span>`:'';el.innerHTML=`<div class="kpis"><div class="kpi good"><div class="label">Cobertura</div><div class="value">${d.cobertura_motores_locales}%</div><div class="meta">6 motores</div></div><div class="kpi cyan"><div class="label">Detección</div><div class="value">${d.deteccion_offline_vs_gateway}%</div></div></div><div class="card"><div class="section-title">Rendimiento por motor · clic en nombre para ver hallazgos</div><table><thead><tr><th>Motor</th><th>Análisis</th><th>Detecciones</th><th>Tasa</th><th>Score medio</th></tr></thead><tbody>${d.motores.map(m=>`<tr><td><span class="link" onclick="openLinked('hallazgos',{source:'${esc(m.motor)}'},'Motor ${esc(m.motor)}')"><b>${esc(m.motor)}</b></span>${m.motor==='KSMG'?ksmgBadge:''}</td><td>${m.n_analisis}</td><td>${m.n_detect}</td><td><span class="badge ${m.tasa_deteccion>25?'alta':m.tasa_deteccion>0?'media':'delivered'}">${m.tasa_deteccion}%</span></td><td class="mono">${m.puntuacion_media}</td></tr>`).join('')}</tbody></table></div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== KSMG ==== */
+async function loadKsmgPanel(){loadKsmgStatus();loadKsmgEvents();}
+async function loadKsmgStatus(){const el=document.getElementById('ksmg-kpis');const banner=document.getElementById('ksmg-banner');try{const s=await api('/api/ksmg/status');const c=s.config||{};fillKsmgForm(c);const estado=s.conectado?'ok':(s.modo==='SIMULADO'?'demo':'warn');const dot=document.getElementById('ksmg-dot'),msg=document.getElementById('ksmg-msg');banner.classList.remove('hidden');dot.style.background=(s.conectado?'var(--green)':(s.modo==='SIMULADO'?'var(--cyan)':'var(--orange)'));msg.textContent=(s.conectado?'Conectado':'No conectado')+(s.detalle?' · '+s.detalle:'');document.getElementById('ksmg-mode').textContent='Modo: '+s.modo;document.getElementById('ksmg-toggle').textContent=s.poller_activo?'Detener poller':'Iniciar poller';el.innerHTML=`<div class="kpis"><div class="kpi ${s.conectado?'good':'warn'}"><div class="label">Estado conector</div><div class="value" style="font-size:1.25rem">${s.conectado?'Conectado':'Sin conexión'}</div><div class="meta">${esc(s.detalle||'')}</div></div><div class="kpi cyan"><div class="label">Procesados (KSMG)</div><div class="value">${s.procesados}</div></div><div class="kpi bad"><div class="label">Errores</div><div class="value">${s.errores}</div></div><div class="kpi purple"><div class="label">Poller</div><div class="value" style="font-size:1.25rem">${s.poller_activo?'Activo':'Detenido'}</div><div class="meta">SMTP: ${s.smtp_activo?'en escucha':'—'}</div></div>${s.en_cola!==null&&s.en_cola!==undefined?`<div class="kpi"><div class="label">.eml en cola</div><div class="value">${s.en_cola}</div></div>`:''}</div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+function fillKsmgForm(c){document.getElementById('k-modo').value=c.modo||'SIMULADO';document.getElementById('k-host').value=c.host||'';document.getElementById('k-port').value=c.port||'';document.getElementById('k-user').value=c.user||'';document.getElementById('k-pass').value='';document.getElementById('k-ssl').checked=!!c.use_ssl;document.getElementById('k-folder').value=c.imap_folder||'INBOX';document.getElementById('k-watch').value=c.watch_dir||'';document.getElementById('k-poll').value=c.poll_seconds||30;document.getElementById('k-auto').checked=!!c.auto_arranque;document.getElementById('k-smtpbind').value=c.smtp_bind||'127.0.0.1';document.getElementById('k-smtpport').value=c.smtp_port||2525;}
+function ksmgFormPayload(){return{modo:document.getElementById('k-modo').value,host:document.getElementById('k-host').value,port:parseInt(document.getElementById('k-port').value||0),user:document.getElementById('k-user').value,password:document.getElementById('k-pass').value,use_ssl:document.getElementById('k-ssl').checked,imap_folder:document.getElementById('k-folder').value,watch_dir:document.getElementById('k-watch').value,poll_seconds:parseInt(document.getElementById('k-poll').value||30),auto_arranque:document.getElementById('k-auto').checked,smtp_bind:document.getElementById('k-smtpbind').value,smtp_port:parseInt(document.getElementById('k-smtpport').value||2525)};}
+async function saveKsmgConfig(){try{await api('/api/ksmg/config',{method:'POST',body:JSON.stringify(ksmgFormPayload())});toast('Configuración KSMG guardada');loadKsmgStatus();}catch(e){toast('Error: '+e.message,'err');}}
+async function testKsmg(){toast('Probando conector…','warn');try{const d=await api('/api/ksmg/test',{method:'POST',body:JSON.stringify(ksmgFormPayload())});toast(d.ok?'OK · '+d.detalle:'Fallo · '+d.detalle,d.ok?'ok':'err');loadKsmgStatus();}catch(e){toast('Error: '+e.message,'err');}}
+async function pollKsmg(){toast('Purgando conector…','warn');try{await api('/api/ksmg/poll',{method:'POST',body:'{}'});toast('Purga completada');loadKsmgStatus();loadKsmgEvents();}catch(e){toast('Error: '+e.message,'err');}}
+async function toggleKsmg(){try{const s=await api('/api/ksmg/status');const d=await api(s.poller_activo?'/api/ksmg/stop':'/api/ksmg/start',{method:'POST',body:'{}'});toast(d.msg);loadKsmgStatus();}catch(e){toast('Error: '+e.message,'err');}}
+async function loadKsmgEvents(){const el=document.getElementById('ksmg-events');try{const d=await api('/api/ksmg/events?limit=60');const rows=d.eventos||[];if(!rows.length){el.innerHTML='<table><tbody><tr class="empty"><td>Sin eventos. Conecte un conector KSMG para ver la ingesta.</td></tr></tbody></table>';return;}el.innerHTML=`<table><thead><tr><th>Fecha</th><th>Conector</th><th>Origen</th><th>Msg ID</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>${rows.map(e=>`<tr><td class="small muted">${fmtDate(e.ts)}</td><td><span class="badge ${e.connector==='SMTP'?'salida':'entrada'}">${esc(e.connector)}</span></td><td class="small muted">${esc(e.source||'')}</td><td>${e.msg_id?`<span class="link mono" onclick="openLinked('quarantine',{msg_id:'${esc(e.msg_id)}'},'KSMG')">${esc(e.msg_id)}</span>`:'—'}</td><td><span class="badge ${e.outcome==='ok'?'delivered':'blocked'}">${e.outcome}</span></td><td class="small muted">${esc((e.detail||'').slice(0,60))}</td></tr>`).join('')}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== REPORTES POR BUZON ==== */
+let REPORTE_CONFIGS=[];
+function rTodoToggle(){const chk=document.getElementById('r-todo');const bi=document.getElementById('r-buzon');if(chk.checked){bi.value='*';bi.disabled=true;}else{bi.value='';bi.disabled=false;}loadReportePreviewHint();}
+function reporteBuzon(){return (document.getElementById('r-buzon').value||'*').trim().toLowerCase()||'*';}
+function reporteDays(){return parseInt(document.getElementById('r-days').value||7);}
+function reportePayload(){return{buzon:reporteBuzon(),email:document.getElementById('r-email').value.trim(),frecuencia:document.getElementById('r-freq').value,hora:document.getElementById('r-hora').value||'08:00',activo:document.getElementById('r-activo').checked};}
+async function loadReportePanel(){loadReporteEstado();loadReporteHistorial();}
+async function loadReporteEstado(){const el=document.getElementById('reporte-kpis');const banner=document.getElementById('reporte-banner');try{const s=await api('/api/reporte-buzon/estado');banner.classList.remove('hidden');const dot=document.getElementById('reporte-dot'),msg=document.getElementById('reporte-msg');dot.style.background=s.smtp_configurado?'var(--green)':'var(--orange)';msg.textContent=s.smtp_configurado?('SMTP activo · '+s.smtp_host+':'+(s.smtp?s.smtp.port:'')):'SMTP sin configurar — configure el servidor abajo o LOOK_SMTP_*';fillReporteSmtp(s.smtp||{});document.getElementById('reporte-smtp').textContent=s.poller_activo?'worker activo':'worker detenido';el.innerHTML=`<div class="kpis"><div class="kpi cyan"><div class="label">Programados</div><div class="value">${s.configurados}</div><div class="meta">activos: ${s.activos}</div></div><div class="kpi purple"><div class="label">Buzones conocidos</div><div class="value">${s.buzones_conocidos.length}</div><div class="meta">para personalizar informes</div></div><div class="kpi good"><div class="label">Worker</div><div class="value" style="font-size:1.25rem">${s.poller_activo?'Activo':'Detenido'}</div></div></div>`;const dl=document.getElementById('r-buzones');dl.innerHTML=s.buzones_conocidos.map(b=>`<option value="${esc(b)}"></option>`).join('')+'<option value="*"></option>';REPORTE_CONFIGS=s;const ct=document.getElementById('reporte-configs');ct.innerHTML=`<table><thead><tr><th>Buzón</th><th>Email destino</th><th>Frecuencia</th><th>Hora</th><th>Estado</th><th>Próxima ejecución</th><th>Acciones</th></tr></thead><tbody>${s.configs.map(c=>`<tr><td><span class="link mono" onclick="fillReporteForm('${esc(c.buzon)}')">${esc(c.buzon==='*'?'TODA LA ORGANIZACIÓN (*)':c.buzon)}</span></td><td class="mono small">${esc(c.email)}</td><td><span class="badge ${c.frecuencia==='DIARIO'?'entrada':'info'}">${c.frecuencia}</span></td><td>${esc(c.hora)}</td><td><span class="badge ${c.activo?'delivered':'expunged'}">${c.activo?'activo':'inactivo'}</span>${c.pendiente_envio?'<span class="badge warn" style="margin-left:4px" title="Pendiente de envío en el próximo ciclo">pend.»</span>':''}</td><td class="small muted">${c.proxima_ejecucion?fmtDate(c.proxima_ejecucion):'—'}</td><td class="ops"><button class="btn small" onclick="sendReporteBuzon('${esc(c.buzon)}')">Enviar ahora</button> <button class="btn small" onclick="delReporteBuzon('${esc(c.buzon)}')">Eliminar</button></td></tr>`).join('')||'<tr class="empty"><td colspan="7">Sin programaciones. Configure un buzon arriba y pulse Guardar config.</td></tr>'}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+function fillReporteForm(buzon){const row=REPORTE_CONFIGS.configs&&REPORTE_CONFIGS.configs.find(c=>c.buzon===buzon);document.getElementById('r-todo').checked=buzon==='*';rTodoToggle();document.getElementById('r-buzon').value=buzon;if(buzon!=='*')document.getElementById('r-buzon').disabled=false;if(row){document.getElementById('r-email').value=row.email;document.getElementById('r-freq').value=row.frecuencia;document.getElementById('r-hora').value=row.hora;document.getElementById('r-activo').checked=row.activo;}document.getElementById('r-days').value=7;}
+async function saveReporteConfig(){try{await api('/api/reporte-buzon/config',{method:'POST',body:JSON.stringify(reportePayload())});toast('Programación guardada');loadReporteEstado();}catch(e){toast('Error: '+e.message,'err');}}
+async function delReporteBuzon(buzon){if(!confirm('¿Eliminar la programación de '+buzon+'?'))return;try{await api('/api/reporte-buzon/eliminar',{method:'POST',body:JSON.stringify({buzon})});toast('Programación eliminada');loadReporteEstado();}catch(e){toast('Error: '+e.message,'err');}}
+async function previewReporte(){const el=document.getElementById('reporte-preview');el.innerHTML='<div class="loading">Cargando…</div>';try{const d=await api('/api/reporte-buzon/ver?buzon='+encodeURIComponent(reporteBuzon())+'&days='+reporteDays());renderReportePreview(d);}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+function renderReportePreview(d){const el=document.getElementById('reporte-preview');const t=d.totales,h=d.hallazgos;const label=d.buzon==='*'?'TODA LA ORGANIZACIÓN':d.buzon;el.innerHTML=`<div class="kpis"><div class="kpi cyan"><div class="label">Entrantes</div><div class="value">${t.entrada.mensajes}</div><div class="meta">remitentes: ${t.entrada.remitentes_unicos}</div></div><div class="kpi purple"><div class="label">Salientes</div><div class="value">${t.salida.mensajes}</div><div class="meta">destinos: ${t.salida.destinatarios_unicos}</div></div><div class="kpi good"><div class="label">Buzones activos</div><div class="value">${t.buzones_activos}</div><div class="meta">externos: ${t.buzones_externos_contactados}</div></div><div class="kpi ${h.total?'bad':'good'}"><div class="label">Hallazgos</div><div class="value">${h.total}</div><div class="meta">${Object.entries(h.por_severidad||{}).map(([s,c])=>s+': '+c).join(' · ')||'—'}</div></div><div class="kpi warn"><div class="label">Cuarentena/bloq.</div><div class="value">${t.cuarentena_bloqueados}</div></div></div><div class="small muted" style="margin:8px 0">Informe <b>${esc(label)}</b> · ${d.periodo.dias}d — de ${fmtDate(d.periodo.desde)} a ${fmtDate(d.periodo.hasta)}. Veredictos entrada: ${Object.entries(t.entrada.veredictos||{}).map(([k,v])=>k+'='+v).join(', ')||'—'}.</div>${h.detalle_top.length?`<div class="table-wrap"><table><thead><tr><th>Severidad</th><th>Tipo</th><th>Titulo</th><th>Motor</th><th>Score</th></tr></thead><tbody>${h.detalle_top.slice(0,6).map(f=>`<tr><td><span class="badge ${f.severidad.toLowerCase()}">${f.severidad}</span></td><td class="small">${esc(f.tipo)}</td><td class="small">${esc(f.titulo)}<div class="small muted">${esc((f.detalle||'').slice(0,56))}</div></td><td class="muted small">${esc(f.source)}</td><td class="mono">${f.score}</td></tr>`).join('')}</tbody></table></div>`:''}`;}
+function loadReportePreviewHint(){if(document.getElementById('r-todo').checked){document.getElementById('reporte-preview').innerHTML='<span class="muted small">Informe de TODA la organización: incluye entrantes/salientes globales y cantidad de buzones activos.</span>';}}
+async function sendReporteAhora(){const email=document.getElementById('r-email').value.trim();if(!email){toast('Indique email destino (o pinche una programación)','warn');return;}await sendReporteApi({buzon:reporteBuzon(),days:reporteDays(),email});}
+async function sendReporteBuzon(buzon){const row=REPORTE_CONFIGS.configs&&REPORTE_CONFIGS.configs.find(c=>c.buzon===buzon);if(!row){toast('Programación no encontrada','err');return;}await sendReporteApi({buzon,days:7,email:row.email});}
+async function sendReporteApi(payload){try{const d=await api('/api/reporte-buzon/enviar',{method:'POST',body:JSON.stringify(payload)});toast(d.ok?'Informe enviado · '+d.detalle:'Fallo: '+d.detalle,d.ok?'ok':'err');loadReporteEstado();loadReporteHistorial();}catch(e){toast('Error: '+e.message,'err');}}
+async function runReportesProgramados(){toast('Ejecutando programados…','warn');try{const d=await api('/api/reporte-buzon/ejecutar',{method:'POST',body:'{}'});toast('Ejecutados '+d.ejecutados+' · ok '+d.ok+' · fallos '+(d.ejecutados-d.ok));loadReporteEstado();loadReporteHistorial();}catch(e){toast('Error: '+e.message,'err');}}
+function fillReporteSmtp(s){document.getElementById('r-smtp-host').value=s.host||'';document.getElementById('r-smtp-port').value=s.port||587;document.getElementById('r-smtp-from').value=s.from||'';document.getElementById('r-smtp-user').value=s.user||'';document.getElementById('r-smtp-pass').value='';document.getElementById('r-smtp-state').className='pill '+(s.configurado?'ok':'bad');document.getElementById('r-smtp-state').textContent=s.configurado?'configurado':'sin configurar';}
+function smtpPayload(){return{host:document.getElementById('r-smtp-host').value.trim(),port:parseInt(document.getElementById('r-smtp-port').value||587),from:document.getElementById('r-smtp-from').value.trim(),user:document.getElementById('r-smtp-user').value.trim(),password:document.getElementById('r-smtp-pass').value};}
+async function saveReporteSmtp(){try{await api('/api/reporte-buzon/smtp',{method:'POST',body:JSON.stringify(smtpPayload())});toast('Configuración SMTP guardada');loadReporteEstado();}catch(e){toast('Error: '+e.message,'err');}}
+async function testReporteSmtp(){toast('Probando SMTP…','warn');try{const d=await api('/api/reporte-buzon/smtp-test',{method:'POST',body:'{}'});toast(d.ok?'OK · '+d.detalle:'Fallo · '+d.detalle,d.ok?'ok':'err');}catch(e){toast('Error: '+e.message,'err');}}
+async function loadReporteHistorial(){const el=document.getElementById('reporte-historial');try{const d=await api('/api/reporte-buzon/historial?limit=50');const rows=d.enviados||[];if(!rows.length){el.innerHTML='<table><tbody><tr class="empty"><td>Sin envíos registrados todavía.</td></tr></tbody></table>';return;}el.innerHTML=`<table><thead><tr><th>Fecha</th><th>Buzón</th><th>Email</th><th>Período</th><th>Entr.</th><th>Sal.</th><th>Hallazgos</th><th>Cuarent.</th><th>Estado</th></tr></thead><tbody>${rows.map(e=>{const r=e.resumen||{};return`<tr><td class="small muted">${fmtDate(e.sent_at)}</td><td><span class="link mono" onclick="fillReporteForm('${esc(e.buzon)}')">${esc(e.buzon==='*'?'*':e.buzon)}</span></td><td class="mono small">${esc(e.email)}</td><td class="small muted">${e.dias}d</td><td>${r.entrada?.mensajes??'—'}</td><td>${r.salida?.mensajes??'—'}</td><td>${r.hallazgos??'—'}</td><td>${r.cuarentena_bloqueados??'—'}</td><td><span class="badge ${e.enviado_ok?'delivered':'blocked'}">${e.enviado_ok?'enviado':'fallo'}</span><div class="small muted">${esc((e.detalle||'').slice(0,40))}</div></td></tr>`;}).join('')}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== DEPARTAMENTOS ==== */
+async function loadDepts(){try{const d=await api('/api/dashboard/overview');const depts=d.mapa_calor_departamento||[];const sel=document.getElementById('dept-selector');sel.innerHTML='';if(!depts.length){document.getElementById('dept-load').innerHTML='<span class="muted small">Sin departamentos</span>';return;}depts.forEach((x,i)=>{const b=document.createElement('button');b.className='btn small'+(i===0?' primary':'');b.textContent=x.departamento+(x.mensajes?` · ${x.mensajes}`:'');b.onclick=()=>{sel.querySelectorAll('button').forEach(bb=>bb.className='btn small');b.className='btn small primary';loadDept(x.departamento);};sel.appendChild(b);});loadDept(depts[0].departamento);}catch(e){}}
+async function loadDept(name){const el=document.getElementById('dept-load');try{const d=await api('/api/dashboard/department/'+encodeURIComponent(name));el.innerHTML=`<div class="kpis"><div class="kpi ${d.uri_dept>50?'bad':''}"><div class="label">URI depto</div><div class="value">${d.uri_dept}</div><div class="meta">${esc(d.departamento)}</div></div><div class="kpi warn"><div class="label">Mensajes riesgo</div><div class="value">${d.mensajes_riesgo}</div></div></div><div class="card" style="margin-bottom:14px"><div class="actions" style="margin-bottom:12px"><button class="btn small" onclick="openLinked('quarantine',{search:'@${esc(d.departamento)}'.toLowerCase()},'Depto ${esc(d.departamento)}')">→ Ver en cuarentena</button><button class="btn small" onclick="openLinked('direcciones',{search:'@${esc(d.departamento)}'.toLowerCase()},'Depto ${esc(d.departamento)}')">→ Ver direcciones</button></div><div class="section-title">Detalle · ${esc(d.departamento)}</div><table><thead><tr><th>Asunto</th><th>Remitente</th><th>Score</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${d.detalle.map(m=>`<tr><td class="small">${esc(m.subject)}</td><td><span class="link mono small" onclick="openLinked('direcciones',{search:'${esc(m.sender)}'},'Depto')">${esc(m.sender)}</span></td><td class="mono"><b>${m.score}</b></td><td><span class="badge quarantine">${esc(m.status)}</span></td><td class="small muted">${fmtDate(m.ts)}</td></tr>`).join('')||'<tr class="empty"><td colspan="5">Sin mensajes</td></tr>'}</tbody></table></div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== LICENCIA ==== */
+async function loadLicense(){const el=document.getElementById('license-load');try{const s=await api('/api/licences/state');const cls={VIGENTE:'delivered',GRACIA:'quarantine',EXPIRADA:'blocked',SIN_LICENCIA:'expunged'};updateLicenseBanner(s);el.innerHTML=`<div class="kpis"><div class="kpi"><div class="label">Estado</div><div class="value" style="font-size:1.3rem">${esc(s.estado||'—')}</div></div><div class="kpi"><div class="label">Tipo</div><div class="value" style="font-size:1.3rem">${esc(s.tipo||'—')}</div></div><div class="kpi"><div class="label">Días restantes</div><div class="value">${s.dias_restantes??'—'}</div></div><div class="kpi"><div class="label">Sistema</div><div class="value" style="font-size:.9rem">${esc(s.sistema||'—')}</div></div></div><div class="card"><div class="section-title">Estado de la licencia · <span class="link" onclick="openLinked('audit',{action:'license_install'},'Licencia')">Ver eventos en auditoría</span></div><table><thead><tr><th>Estado</th><th>Tipo</th><th>Cliente</th><th>Expira</th></tr></thead><tbody>${s.estado?`<tr><td><span class="badge ${cls[s.estado]||'expunged'}">${esc(s.estado)}</span></td><td>${esc(s.tipo||'-')}</td><td class="mono">${esc(s.cliente_id||'-')}</td><td class="mono">${esc(s.expira||'-')}</td></tr>`:'<tr class="empty"><td colspan="4">Sin licencia</td></tr>'}</tbody></table></div>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+function updateLicenseBanner(s){const b=document.getElementById('license-banner'),dot=document.getElementById('license-dot'),msg=document.getElementById('license-msg');const boot=document.querySelector('#lic-pill');if(boot&&boot.textContent.includes('demo'))return;b.classList.remove('hidden');if(s.estado==='VIGENTE'){dot.style.background='var(--green)';msg.textContent=`Vigente · ${s.dias_restantes} días`;b.style.borderColor='var(--green)';}else if(s.estado==='GRACIA'){dot.style.background='var(--orange)';msg.textContent=`Gracia · ${s.dias_restantes} días`;b.style.borderColor='var(--orange)';}else if(s.estado==='EXPIRADA'){dot.style.background='var(--red)';msg.textContent='Expirada';b.style.borderColor='var(--red)';}else{dot.style.background='var(--muted)';msg.textContent='Sin licencia';b.style.borderColor='var(--border)';}}
+async function genRequest(){const nombre=document.getElementById('lic-client').value,email=document.getElementById('lic-email').value,tipo=document.getElementById('lic-tipo').value;if(!nombre||!email){toast('Indique nombre y email','warn');return;}const d=await api('/api/licences/generate-request?cliente_nombre='+encodeURIComponent(nombre)+'&cliente_email='+encodeURIComponent(email)+'&tipo='+tipo);download('solicitud_omni_lic.json',JSON.stringify(d,null,2));toast('Solicitud generada');}
+async function installLicense(){const f=document.getElementById('lic-file').files[0];if(!f){toast('Seleccione archivo','warn');return;}try{await api('/api/licences/install',{method:'POST',body:await f.text()});toast('Licencia activada');loadLicense();}catch(e){toast('Rechazada: '+e.message,'err');}}
+function download(name,content){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'application/json'}));a.download=name;a.click();}
+
+/* ==== AUDITORIA ==== */
+async function loadAudit(){const k=document.getElementById('audit-kpis');try{const s=await api('/api/audit/summary');k.innerHTML=`<div class="kpi"><div class="label">Entradas</div><div class="value">${s.entradas}</div></div><div class="kpi ${s.integridad_ok?'good':'bad'}"><div class="label">Integridad</div><div class="value" style="font-size:1.2rem">${s.integridad_ok?'OK':'ROTA'}</div><div class="meta">${s.verificadas}/${s.entradas} verificadas</div></div>`;}catch(e){}const el=document.getElementById('audit-load');try{const au=ATTACH.audit||{};const params=new URLSearchParams();if(au.action)params.set('action',au.action);if(au.actor)params.set('actor',au.actor);document.getElementById('au-action').value=au.action||'';document.getElementById('au-actor').value=au.actor||'';const d=await api('/api/audit/actions?limit=300&'+params);el.innerHTML=`<table><thead><tr><th>#</th><th>Fecha</th><th>Acción</th><th>Actor</th><th>Detalle</th><th>Hash</th></tr></thead><tbody>${d.map(a=>`<tr><td>${a.id}</td><td class="small muted">${fmtDate(a.ts)}</td><td><span class="link" onclick="openLinked('audit',{action:'${esc(a.action)}'},'Acción')">${esc(a.action)}</span></td><td><span class="link" onclick="openLinked('audit',{actor:'${esc(a.actor)}'},'Actor')">${esc(a.actor)}</span></td><td class="small muted">${esc((a.data||'').slice(0,56))}</td><td class="mono">${esc((a.entry_hash||'').slice(0,12))}…</td></tr>`).join('')||'<tr class="empty"><td colspan="6">Sin entradas</td></tr>'}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+
+/* ==== API KEYS ==== */
+async function loadKeys(){const k=document.getElementById('apikey-kpis');try{const d=await api('/api/secure/keys');const total=d.length,activas=d.filter(k=>!k.revoked).length,revocadas=total-activas;k.innerHTML=`<div class="kpis"><div class="kpi"><div class="label">Total</div><div class="value">${total}</div></div><div class="kpi good"><div class="label">Activas</div><div class="value">${activas}</div></div><div class="kpi bad"><div class="label">Revocadas</div><div class="value">${revocadas}</div></div></div>`;}catch(e){}const el=document.getElementById('keys-load');try{const d=await api('/api/secure/keys');el.innerHTML=`<table><thead><tr><th>#</th><th>Clave</th><th>Rol</th><th>Buzón (M2M)</th><th>TTL</th><th>Expira</th><th>Estado</th><th></th></tr></thead><tbody>${d.map(k=>`<tr><td>${k.id}</td><td class="mono">${esc(k.prefix)}·${esc(k.label)}</td><td><span class="badge info">${k.role}</span></td><td class="mono small">${k.buzon?esc(k.buzon):'—'}</td><td>${k.ttl_days}d</td><td class="small muted">${fmtDate(k.expires_at)}</td><td><span class="badge ${k.revoked?'expunged':'delivered'}">${k.revoked?'REVOCADA':'activa'}</span></td><td>${!k.revoked?`<button class="btn small" onclick="revokeKey(${k.id})">Revocar</button>`:'—'}</td></tr>`).join('')}</tbody></table>`;}catch(e){el.innerHTML='<div class="err">'+esc(e.message)+'</div>';}}
+async function createKey(){const label=document.getElementById('ek-label').value||'key-demo',role=document.getElementById('ek-role').value,buzon=document.getElementById('ek-buzon').value.trim();const d=await api('/api/secure/keys',{method:'POST',body:JSON.stringify({label,role,buzon:buzon||null})});toast('API Key creada'+(buzon?' (buzón '+buzon+')':''));alert('Guarda esta clave:\n\n'+d.api_key+(buzon?'\n\nAlcance de buzón: '+buzon+'\nÚsala con GET /api/reporte-buzon/mio y cabecera X-API-Key':''));loadKeys();}
+async function revokeKey(id){await api('/api/secure/keys/'+id,{method:'DELETE'});toast('Revocada');loadKeys();}
+
+/* ==== DEMO INGEST ==== */
+async function ingestDemo(direction){const payloads={ENTRADA:{subject:'Confirmación urgente de sus datos bancarios',sender:'noreply@phish-campaign.com',recipients:['usuario1@corp.demo'],body:'Verifique su cuenta o será bloqueada. password:hunter2 http://bit.ly/confirma-datos',attachments:[{filename:'confirmacion.docm',size:180000,sha256:''}],auth:{spf:'fail',dkim:'fail',dmarc:'fail'},direction:'ENTRADA'},SALIDA:{subject:'Propuesta comercial trimestral',sender:'ventas@corp.demo',recipients:['nuevo.cliente@clientes-ext.com','socio@partners-galaxy.net'],body:'Estimado, adjuntamos nuestra propuesta comercial.',attachments:[],auth:{spf:'pass',dkim:'pass',dmarc:'pass'},direction:'SALIDA'}};try{const d=await api('/api/mail/ingest-json',{method:'POST',body:JSON.stringify(payloads[direction])});toast(direction.toLowerCase()+' · '+d.verdict.vote+' ('+d.verdict.composite_score+')');const n=document.querySelector('#sidebar button.nav.active')?.dataset.panel;if(n)nav(n);}catch(e){toast('Error: '+e.message,'err');}}
+
+if(TOKEN){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');initApp();}
+</script>
+</body>
+</html>

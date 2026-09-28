@@ -1,0 +1,1 @@
+"""Agregaciones y metricas para el dashboard (Capa 5)."""
