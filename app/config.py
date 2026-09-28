@@ -59,6 +59,15 @@ SMTP_USER = os.getenv("LOOK_SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("LOOK_SMTP_PASSWORD", "")
 NOTIFY_EMAIL = os.getenv("LOOK_NOTIFY_EMAIL", "")
 
+# Advertencia si SMTP no está configurado para modo producción
+if not SMTP_HOST and os.getenv("OMNI_DEMO_MODE", "1") != "1":
+    import warnings
+    warnings.warn(
+        "LOOK_SMTP_HOST no configurado: los reportes por email no funcionarán "
+        "hasta configurar variables LOOK_SMTP_HOST/PORT/USER/PASSWORD",
+        UserWarning,
+    )
+
 # ------------------------------------------------------------------ webhook
 WEBHOOK_URL = os.getenv("LOOK_WEBHOOK_URL", "")
 
@@ -72,7 +81,18 @@ REPORT_MAX_DAYS = int(os.getenv("OMNI_REPORT_MAX_DAYS", "90"))
 # ---------------------------------------------------------------------- KSMG
 # Integracion con Kaspersky Secure Mail Gateway (real o simulada).
 # Modos: SIMULADO | EML_WATCH | IMAP | SMTP
+# Por defecto SIMULADO; cambiar a EML_WATCH/IMAP/SMTP según infraestructura disponible.
 KSMG_MODO = os.getenv("OMNI_KSMG_MODO", "SIMULADO").upper()
+
+# Advertencia si KSMG está en modo simulado para producción
+if KSMG_MODO == "SIMULADO" and os.getenv("OMNI_DEMO_MODE", "1") != "1":
+    import warnings
+    warnings.warn(
+        "KSMG_MODO es SIMULADO: sin gateway KSMG real conectado. "
+        "Para producción, configure OMNI_KSMG_MODO=EML_WATCH, IMAP o SMTP "
+        "según la infraestructura disponible.",
+        UserWarning,
+    )
 KSMG_HOST = os.getenv("OMNI_KSMG_HOST", "")            # host IMAP de KSMG
 KSMG_PORT = int(os.getenv("OMNI_KSMG_PORT", "143"))    # puerto IMAP (993 con SSL)
 KSMG_USER = os.getenv("OMNI_KSMG_USER", "")
@@ -95,3 +115,13 @@ INTERNAL_DOMAINS = [
 
 # -------------------------------------------------------------------- demo
 DEMO_MODE = os.getenv("OMNI_DEMO_MODE", "1") == "1"
+
+# Modo producción: cuando OMNI_DEMO_MODE no es "1", 
+# se aplican restricciones adicionales y advertencias
+if not DEMO_MODE:
+    import warnings
+    warnings.warn(
+        "Modo PRODUCCIÓN activado: ciertas funcionalidades de demo están deshabilitadas. "
+        "Asegúrese de tener configurado: LOOK_HMAC_SECRET, LOOK_SMTP_HOST, y modo KSMG adecuado.",
+        UserWarning,
+    )
