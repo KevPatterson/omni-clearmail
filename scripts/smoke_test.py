@@ -63,25 +63,34 @@ def main():
         r = client.get("/api/dashboard/department/CORP", headers=h)
         check("department", r.status_code == 200)
 
-        # ingest via API (json)
+        # ingest via API (json) - phishing realista
         r = client.post("/api/mail/ingest-json", json={
-            "subject": "URGENTE: ganador premio haga clic",
-            "sender": "noreply@spam-hub.info",
+            "subject": "[URGENTE] Confirme su cuenta bancaria - Ref: SEC-2024-4782",
+            "sender": "alertas-seguridad@banco-santander.tk",
             "recipients": ["usuario1@corp.demo"],
-            "body": "Haga clic aqui para reclamar su premio password=secret",
-            "attachments": [{"filename": "ganador.docm", "size": 300000, "sha256": ""}],
-            "auth": {"spf": "fail", "dmarc": "fail", "dkim": "none"},
+            "body": "Estimado cliente, hemos detectado actividad sospechosa en su cuenta ****2847. "
+                    "Por seguridad, su cuenta ha sido temporalmente suspendida. "
+                    "Debe verificar su identidad en las proximas 24 horas accediendo a: "
+                    "https://192.168.1.50/verificacion. "
+                    "Introduzca su contrasena y clave de seguridad. "
+                    "Si no verifica, su cuenta sera bloqueada permanentemente.",
+            "attachments": [],
+            "auth": {"spf": "fail", "dmarc": "fail", "dkim": "fail"},
         })
         check("ingest 200", r.status_code == 200, str(r.status_code))
         verdict = r.json().get("verdict")
         print("   verdict:", verdict.get("vote"), verdict.get("composite_score"))
 
-        # ingest outbound (SALIDA)
+        # ingest outbound (SALIDA) - email legitimo corporativo
         r = client.post("/api/mail/ingest-json", json={
-            "subject": "Presupuesto anual cliente",
+            "subject": "RE: Propuesta comercial Q1-2024 - Cliente Acme Corp",
             "sender": "comercial@corp.demo",
-            "recipients": ["cliente@externo.net"],
-            "body": "Adjuntamos el presupuesto anual. Gracias.",
+            "recipients": ["compras@cliente-acme.com"],
+            "body": "Estimado cliente, adjuntamos la propuesta comercial solicitada para Q1-2024. "
+                    "Incluye: Servicios de mantenimiento (12 meses), Soporte tecnico 24/7, "
+                    "Licencias software corporativo. Total: 45,000 EUR + IVA. "
+                    "Quedamos a su disposicion para cualquier aclaracion. "
+                    "Saludos cordiales, Departamento Comercial.",
             "attachments": [],
             "auth": {"spf": "pass", "dkim": "pass", "dmarc": "pass"},
             "direction": "SALIDA",
@@ -129,9 +138,20 @@ def main():
         check("create key", r.status_code == 200)
         api_key = r.json().get("api_key", "")
 
-        # access con API key en ingesta
+        # access con API key en ingesta - email realista
         r = client.post("/api/mail/ingest", headers={"X-API-Key": api_key},
-                        content=b"From: x@y.z\r\nSubject: test\r\n\r\nbody")
+                        content=b"From: notificaciones@sistema-interno.corp.demo\r\n"
+                                b"To: equipo-ti@corp.demo\r\n"
+                                b"Subject: Backup automatico completado - Server PROD-DB-01\r\n"
+                                b"Date: Mon, 22 Jan 2024 03:00:15 +0100\r\n"
+                                b"Content-Type: text/plain\r\n"
+                                b"\r\n"
+                                b"Backup automatico completado exitosamente.\r\n"
+                                b"Servidor: PROD-DB-01\r\n"
+                                b"Base de datos: PostgreSQL 15.2\r\n"
+                                b"Tamano: 2.4 GB\r\n"
+                                b"Duracion: 18 minutos\r\n"
+                                b"Estado: OK\r\n")
         check("ingest con api key", r.status_code == 200, str(r.status_code))
 
         # backup health
