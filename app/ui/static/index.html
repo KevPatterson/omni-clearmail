@@ -572,7 +572,44 @@ async function revokeKey(id){await api('/api/secure/keys/'+id,{method:'DELETE'})
 /* ==== DEMO INGEST ==== */
 async function ingestDemo(direction){const payloads={ENTRADA:{subject:'Confirmación urgente de sus datos bancarios',sender:'noreply@phish-campaign.com',recipients:['usuario1@corp.demo'],body:'Verifique su cuenta o será bloqueada. password:hunter2 http://bit.ly/confirma-datos',attachments:[{filename:'confirmacion.docm',size:180000,sha256:''}],auth:{spf:'fail',dkim:'fail',dmarc:'fail'},direction:'ENTRADA'},SALIDA:{subject:'Propuesta comercial trimestral',sender:'ventas@corp.demo',recipients:['nuevo.cliente@clientes-ext.com','socio@partners-galaxy.net'],body:'Estimado, adjuntamos nuestra propuesta comercial.',attachments:[],auth:{spf:'pass',dkim:'pass',dmarc:'pass'},direction:'SALIDA'}};try{const d=await api('/api/mail/ingest-json',{method:'POST',body:JSON.stringify(payloads[direction])});toast(direction.toLowerCase()+' · '+d.verdict.vote+' ('+d.verdict.composite_score+')');const n=document.querySelector('#sidebar button.nav.active')?.dataset.panel;if(n)nav(n);}catch(e){toast('Error: '+e.message,'err');}}
 
-if(TOKEN){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');initApp();}
+// Validar token al cargar la página
+async function validateSessionAndInit(){
+  if(!TOKEN){
+    // No hay token guardado, mostrar login
+    return;
+  }
+  
+  try {
+    // Intentar validar el token con el servidor
+    const response = await fetch(API+'/api/auth/me', {
+      headers: {'Authorization': 'Bearer ' + TOKEN}
+    });
+    
+    if(response.ok){
+      // Token válido, mostrar la aplicación
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      initApp();
+    } else {
+      // Token inválido, limpiar sesión
+      console.warn('Token inválido o expirado, limpiando sesión');
+      localStorage.removeItem('ocm_token');
+      localStorage.removeItem('ocm_role');
+      TOKEN = null;
+      ROLE = null;
+    }
+  } catch(e) {
+    // Error de red o servidor, limpiar sesión por seguridad
+    console.error('Error validando sesión:', e);
+    localStorage.removeItem('ocm_token');
+    localStorage.removeItem('ocm_role');
+    TOKEN = null;
+    ROLE = null;
+  }
+}
+
+// Inicializar al cargar la página
+validateSessionAndInit();
 </script>
 </body>
 </html>
