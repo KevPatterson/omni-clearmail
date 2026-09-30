@@ -9,31 +9,47 @@ print("\n" + "="*80)
 print("DEMOSTRACION: MOTOR KSMG SIMULADO MEJORADO")
 print("="*80)
 
-# Mensaje de phishing sofisticado
-phishing_eml = b"""From: PayPal Security Team <security@paypal-verify.ml>
-To: usuario@empresa.com
-Subject: URGENTE: Confirme su cuenta en 24 horas
+# Mensaje de phishing realista tipo corporativo
+phishing_eml = b"""From: Microsoft 365 Security <security-alerts@microsoft-services.ml>
+To: it.manager@empresa.com
+Subject: [CRITICAL] Suspicious login attempt blocked - Action Required
+Date: Mon, 22 Jan 2024 08:15:33 +0000
+Message-ID: <20240122081533.SEC789@microsoft-services.ml>
 Content-Type: text/plain
 
-Estimado usuario de PayPal,
+Microsoft 365 Security Center
 
-Hemos detectado actividad sospechosa en su cuenta desde una ubicacion no reconocida.
+SECURITY ALERT - Immediate Action Required
 
-Por razones de seguridad, su cuenta ha sido temporalmente suspendida.
+We have detected and blocked a suspicious sign-in attempt to your Microsoft 365 
+administrator account from an unrecognized location.
 
-Para reactivar su cuenta, debe verificar su identidad INMEDIATAMENTE:
-https://192.168.1.100:8443/paypal-verify/login.php?user=admin@paypal.com
+Sign-in Details:
+- Location: Lagos, Nigeria
+- IP Address: 197.210.55.123
+- Device: Unknown (Linux)
+- Time: January 22, 2024 at 8:12 AM UTC
 
-Introduzca su contrasena y clave de seguridad para confirmar.
+If this was not you, your account credentials may have been compromised.
 
-ATENCION: Si no confirma en las proximas 24 horas, su cuenta sera 
-permanentemente bloqueada y perdera acceso a sus fondos.
+REQUIRED ACTION:
+Please verify this activity within the next 12 hours by clicking below:
+https://192.168.5.200:8443/m365/security/verify?session=a8f7b2e4
 
-Equipo de Seguridad PayPal
+Failure to verify will result in temporary account suspension to protect 
+your organization's data and services.
+
+If you recognize this activity, no action is needed.
+
+Best regards,
+Microsoft 365 Security Team
+Microsoft Corporation
+
+This is an automated security notification. Do not reply to this email.
 """
 
 print("\n" + "-"*80)
-print("CASO DE PRUEBA: Email de Phishing Sofisticado")
+print("CASO DE PRUEBA: Phishing corporativo tipo Microsoft 365")
 print("-"*80)
 
 msg = parser.parse_message(phishing_eml)
@@ -48,28 +64,28 @@ print(f"\n{'='*80}")
 print("RESULTADO DEL ANALISIS")
 print("="*80)
 
-print(f"\n🎯 VEREDICTO: {resultado['verdict'].upper()}")
-print(f"📊 SCORE: {resultado['score']}/100")
-print(f"⚡ ACCION: {resultado['evidence']['accion'].upper()}")
+print(f"\nVEREDICTO: {resultado['verdict'].upper()}")
+print(f"SCORE: {resultado['score']}/100")
+print(f"ACCION: {resultado['evidence']['accion'].upper()}")
 
-print(f"\n📋 CATEGORIAS DETECTADAS:")
+print(f"\nCATEGORIAS DETECTADAS:")
 for cat in resultado['evidence']['categorias']:
     print(f"   - {cat}")
 
-print(f"\n🔍 REGLAS APLICADAS ({len(resultado['evidence']['reglas'])}):")
+print(f"\nREGLAS APLICADAS ({len(resultado['evidence']['reglas'])}):")
 for regla in resultado['evidence']['reglas'][:10]:
     print(f"   - {regla}")
 if len(resultado['evidence']['reglas']) > 10:
     print(f"   ... y {len(resultado['evidence']['reglas']) - 10} mas")
 
-print(f"\n💡 RAZONES PRINCIPALES:")
+print(f"\nRAZONES PRINCIPALES:")
 for i, reason in enumerate(resultado['reasons'][:8], 1):
     print(f"   {i}. {reason}")
 if len(resultado['reasons']) > 8:
     print(f"   ... y {len(resultado['reasons']) - 8} razones adicionales")
 
-print(f"\n📈 CONFIABILIDAD: {resultado['evidence']['reliability']}%")
-print(f"🔧 FUENTE: {resultado['evidence']['fuente']}")
+print(f"\nCONFIABILIDAD: {resultado['evidence']['reliability']}%")
+print(f"FUENTE: {resultado['evidence']['fuente']}")
 
 # Estadisticas
 print(f"\n{'='*80}")
@@ -109,12 +125,12 @@ print(f"""
 """)
 
 print("="*80)
-print("\n✅ El motor KSMG simulado mejorado proporciona:")
-print("   • Detección granular con 90+ patrones")
-print("   • Clasificación por categorías (phish/malware/spam)")
-print("   • Reglas específicas aplicadas")
-print("   • Scoring sofisticado 0-100")
-print("   • Decisión automática (block/quarantine/deliver)")
-print("   • Evidencia detallada y trazable")
-print("\n⚠️  NOTA: Para producción, usar conectores reales (EML_WATCH/IMAP/SMTP)")
+print("\nEl motor KSMG simulado mejorado proporciona:")
+print("   - Deteccion granular con 90+ patrones")
+print("   - Clasificacion por categorias (phish/malware/spam)")
+print("   - Reglas especificas aplicadas")
+print("   - Scoring sofisticado 0-100")
+print("   - Decision automatica (block/quarantine/deliver)")
+print("   - Evidencia detallada y trazable")
+print("\nNOTA: Para produccion, usar conectores reales (EML_WATCH/IMAP/SMTP)")
 print("="*80 + "\n")
