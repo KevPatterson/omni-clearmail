@@ -105,8 +105,15 @@ def engine_ksmg(msg: dict) -> dict:
     """Pasarela Kaspersky SMG: evidencia real del gateway o simulacion."""
     ev = msg.get("ksmg")
     if isinstance(ev, dict) and ev.get("real"):
-        return _verdict("KSMG", *_score_ksmg_evidence(ev))
-    return _verdict("KSMG", *_ksmg_simulado(msg))
+        verdict = _verdict("KSMG", *_score_ksmg_evidence(ev))
+        verdict["evidence"] = ev
+        return verdict
+    
+    # Modo simulado: obtener score, reasons y evidence
+    score, reasons, evidence = _ksmg_simulado(msg)
+    verdict = _verdict("KSMG", score, reasons)
+    verdict["evidence"] = evidence
+    return verdict
 
 
 def _ksmg_evidence_from_headers(raw: bytes) -> dict:
@@ -162,182 +169,375 @@ def _ksmg_simulado(msg: dict) -> tuple:
     """Heuristica local tipo KSMG cuando no hay gateway real conectado.
     
     Simula la evidencia que KSMG real proveería mediante:
-    - Evidencia desde cabeceras .eml (si existen X-Kaspersky/X-KSMG)
-    - SPF/DKIM/DMARC analysis
-    - Clasificacion phishing/malware/spam
-    - Accion de gateway (block/quarantine/deliver)
-    - Reglas aplicadas
-    - Categorias de riesgo
+    - Analisis avanzado de SPF/DKIM/DMARC
+    - Deteccion de phishing/malware/spam con patrones extendidos
+    - Analisis de URLs y reputacion de dominios
+    - Deteccion de adjuntos maliciosos y tecnicas de ofuscacion
+    - Analisis de cabeceras y anomalias de remitente
+    - Scoring sofisticado basado en multiples senales
     """
     score = 0
     reasons = []
     evidence = {"real": False, "details": {}}
+    categorias = []
+    reglas_aplicadas = []
 
-    # 1. Intentar extraer evidencia real desde cabeceras .eml
-    raw = msg.get("raw_hash") and None  # placeholder - en uso real vendría de raw bytes
-    # Si el mensaje tiene auth info de SPF/DKIM/DMARC ya las tenemos en msg["auth"]
-
-    # 2. Analisis SPF/DKIM/DMARC (igual que antes pero mas detallado)
-    auth = msg.get("auth") or {}
-    spf = auth.get("spf", "")
-    dmarc = auth.get("dmarc", "")
-    dkim = auth.get("dkim", "")
-
-    spf_fail = spf and "fail" in str(spf).lower()
-    dmarc_fail = dmarc and "fail" in str(dmarc).lower()
-    dkim_fail = dkim and "fail" in str(dkim).lower()
-
-    # 3. Detectar patrones de dominios y remitentes sospechosos
+    # Extraer datos del mensaje
     sender = msg.get("sender", "")
+    subject = msg.get("subject", "")
+    body = msg.get("body", "")
+    recipients = msg.get("recipients", [])
+    links = msg.get("links", [])
+    attachments = msg.get("attachments", [])
+    auth = msg.get("auth") or {}
+    
+    # Preparar haystack para busquedas
+    haystack = " ".join([subject, body, sender]).lower()
+    
+    # Extraer dominio del remitente
     domain = sender.rsplit("@", 1)[-1].lower() if "@" in sender else ""
-
-    # Blacklist extendida (simulando inteligencia de amenazas KSMG)
-    ksmg_blacklist = [
+    
+    # ============================================================
+    # 1. ANALISIS DE AUTENTICACION (SPF/DKIM/DMARC)
+    # ============================================================
+    spf = str(auth.get("spf", "")).lower()
+    dmarc = str(auth.get("dmarc", "")).lower()
+    dkim = str(auth.get("dkim", "")).lower()
+    
+    spf_fail = "fail" in spf
+    spf_softfail = "softfail" in spf or "~all" in spf
+    dmarc_fail = "fail" in dmarc
+    dkim_fail = "fail" in dkim
+    auth_none = not spf and not dmarc and not dkim
+    
+    if spf_fail:
+        score += 25
+        reasons.append("SPF fail: remitente no autorizado")
+        reglas_aplicadas.append("AUTH_SPF_FAIL")
+    elif spf_softfail:
+        score += 12
+        reasons.append("SPF softfail: remitente sospechoso")
+        reglas_aplicadas.append("AUTH_SPF_SOFTFAIL")
+    
+    if dmarc_fail:
+        score += 20
+        reasons.append("DMARC fail: politica de dominio violada")
+        reglas_aplicadas.append("AUTH_DMARC_FAIL")
+    
+    if dkim_fail:
+        score += 15
+        reasons.append("DKIM fail: firma digital invalida")
+        reglas_aplicadas.append("AUTH_DKIM_FAIL")
+    
+    if auth_none:
+        score += 8
+        reasons.append("sin registros de autenticacion (SPF/DKIM/DMARC)")
+        reglas_aplicadas.append("AUTH_NONE")
+    
+    # ============================================================
+    # 2. BLACKLIST DE DOMINIOS MALICIOSOS (extendida)
+    # ============================================================
+    blacklist_dominios = [
+        # Dominios de phishing conocidos
         "malware-domain.net", "phish-campaign.com", "spam-hub.info",
         "fraud-bank-es.xyz", "cuenta-blue.red", "verifica-seg.rok",
         "banco-falso.com", "login-seguro.xyz", "act-cuenta.com",
-        "recuperar-password.net", "verify-cuenta.ml"
+        "recuperar-password.net", "verify-cuenta.ml", "secure-login.tk",
+        # TLDs sospechosos comunmente usados en phishing
+        ".tk", ".ml", ".ga", ".cf", ".gq",
+        # Patrones sospechosos
+        "paypal-secure", "amazon-verify", "apple-id", "microsoft-account",
+        "google-security", "facebook-support", "whatsapp-verify",
+        "bancosantander", "bbvanet", "lacaixa", "ing-direct"
     ]
-
-    # 4. Detectar categorias de riesgo (phishing, malware, spam)
-    categorias = []
-    haystack = " ".join([
-        msg.get("subject", ""),
-        msg.get("body", ""),
-        sender,
-    ]).lower()
-
-    # Patrones de phishing
-    phishing_patterns = [
-        r"(contrasena|password|clave|credencial).*[:=]\s*\S+",
-        r"(verify|confirm|actualice|clique aqui|haga clic).*cuenta",
-        r"(banco|santander|bbva|caixa).*confirmacion|actualizacion",
-        r"tu cuenta.*bloqueada|suspendida|limitada",
-        r"urgente|inmediato|24 horas|48 horas",
-    ]
-    for pattern in phishing_patterns:
-        if re.search(pattern, haystack):
+    
+    for mal_domain in blacklist_dominios:
+        if mal_domain in domain or mal_domain in " ".join(links):
+            score += 45
+            reasons.append(f"dominio en blacklist: {mal_domain}")
+            reglas_aplicadas.append("DOMAIN_BLACKLIST")
             categorias.append("phish")
             break
-
-    # Patrones de malware/virus
-    malware_patterns = [
-        r"(tracking|invoice|factura|receipt)\s*(.*)?(open|download|click)",
-        r"macro.*(enabled|enable|execute)",
-        r"(attachment|adjunto).*\.(exe|scr|vbs|js|hta)",
+    
+    # ============================================================
+    # 3. DETECCION DE PHISHING (patrones extendidos)
+    # ============================================================
+    phishing_patterns = [
+        # Solicitudes de credenciales
+        (r"(ingres[ae]|introduzca|proporcione|confirme).*(contrase[nñ]a|password|clave|pin|codigo)", 35, "solicita credenciales"),
+        (r"(contrase[nñ]a|password|clave).*[:=]\s*\S+", 40, "credencial en texto"),
+        (r"(usuario|user|email).*[:=].*password.*[:=]", 45, "formato login sospechoso"),
+        
+        # Urgencia y amenazas
+        (r"(urgente|inmediato|ahora|ya|rapido).*(cuenta|sesion|acceso)", 25, "urgencia + cuenta"),
+        (r"(bloqueada?|suspendida?|cancelada?|desactivada?).*(cuenta|tarjeta|acceso)", 30, "amenaza de bloqueo"),
+        (r"(ultimo|final|ultima).*(aviso|oportunidad|advertencia)", 25, "presion temporal"),
+        (r"(24|48|72)\s*(horas?|hrs?)", 20, "limite de tiempo"),
+        (r"(caduca|expira|vence).*(hoy|ma[nñ]ana|pronto)", 22, "expiracion inminente"),
+        
+        # Acciones sospechosas
+        (r"(verifi(que|car)|confirme|actualice|reactive).*(cuenta|datos|informacion)", 28, "solicita verificacion"),
+        (r"(haga?\s*)?clic.*(aqui|aqu[ií]|link|enlace|boton)", 20, "solicita click"),
+        (r"(descargue?|abra|ejecute).*(adjunto|archivo|documento|factura)", 25, "solicita abrir adjunto"),
+        
+        # Instituciones financieras
+        (r"(banco|bbva|santander|caixa|ing).*(verifi|confirm|actualiz|suspend)", 32, "suplantacion bancaria"),
+        (r"(paypal|amazon|ebay|apple|microsoft|google).*(account|cuenta|verify|confirm)", 30, "suplantacion tech"),
+        (r"hacienda|agencia tributaria|sat|sunat|dian.*devolucion|reembolso", 28, "suplantacion fiscal"),
+        
+        # URLs ofuscadas o sospechosas
+        (r"https?://[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}", 25, "URL con IP directa"),
+        (r"https?://[^/]*@", 30, "URL con autenticacion embebida"),
+        (r"bit\.ly|tinyurl|goo\.gl|ow\.ly|short\.link", 15, "acortador de URL"),
+        
+        # Tecnicas de ofuscacion
+        (r"[a-z]{1}[\s\u200b\u200c\u200d]+[a-z]{1}", 18, "caracteres invisibles"),
+        (r"p[a4@]y[p|]?[a4@]l|[a4@]m[a4@]z[o0]n|g[o0]{2}gle", 28, "leetspeak/homoglyphs"),
     ]
-    for pattern in malware_patterns:
-        if re.search(pattern, haystack):
-            categorias.append("malware")
-            break
-
-    # Patrones de spam
-    spam_keywords = ["%", "viagra", "discount", "cheap", "earn money", "make money"]
-    for kw in spam_keywords:
-        if kw in haystack:
-            categorias.append("spam")
-            break
-
-    # 5. Determinar accion de gateway simulada
-    # Lógica: si hay suficientes senales de riesgo -> block/quarantine
-    # si es limpio -> deliver
-    # si es sospechoso -> quarantine
-    phish_count = sum(1 for c in categorias if c == "phish")
-    malware_count = sum(1 for c in categorias if c == "malware")
-    spam_count = sum(1 for c in categorias if c == "spam")
-
-    # Determinar accion basada en se�ales (igual que KSMG real)
-    if phish_count >= 1 or malware_count >= 1:
-        accion_simulada = "block"  # Bloquear por phishing/malware detectado
-        score += 70
-        reasons.append(f"accion gateway simulado: BLOCK por {categorias}")
-    elif phish_count == 0 and malware_count == 0 and spam_count >= 1:
-        accion_simulada = "quarantine"  # Cuarentena por posible spam
-        score += 55
-        reasons.append(f"accion gateway simulado: QUARANTINE por spam")
-    elif dmarc_fail or spf_fail:
-        # Fallo en autenticacion pero sin phishing/malware claro
-        accion_simulada = "quarantine"
-        score += 45
-        reasons.append("accion gateway simulado: QUARANTINE por fallo autenticacion (SPF/DMARC)")
-    elif dkim_fail:
-        accion_simulada = "quarantine"
-        score += 35
-        reasons.append("accion gateway simulado: QUARANTINE por DKIM fail")
-    else:
-        # Senales normales - limpio o bajo riesgo
-        accion_simulada = "deliver"
-        score += 10
-        reasons.append("accion gateway simulado: DELIVER (senales normales)")
-
-    evidence["real"] = True
-    evidence["details"]["accion"] = accion_simulada
-
-    # 6. Añadir score segun categorias detectadas
-    if "phish" in categorias:
-        score += 50
-        if "phishing" not in reasons:
-            reasons.append("clasificacion simulada: phishing detectado")
-    if "malware" in categorias:
-        score += 60
-        if "malware" not in reasons:
-            reasons.append("clasificacion simulada: malware detectado")
-    if "spam" in categorias:
-        score += 30
-        if "spam" not in reasons:
-            reasons.append("clasificacion simulada: spam detectado")
-
-    # 7. Añadir score por patrones de urgencia en asunto
-    subject = msg.get("subject", "").lower()
-    urgency_words = ["urgente", "inmediato", "48 horas", "cuenta bloqueada", "ultimo aviso"]
-    urgency_found = [u for u in urgency_words if u in subject]
-    if urgency_found:
-        score += min(20, 8 * len(urgency_found))
-        reasons.append(f"patron urgencia: {', '.join(urgency_found)}")
-
-    # 8. Añadir score por palabras clave financieras/bancarias
-    fin_keywords = ["banco", "caixa", "santander", "bbva", "clave", "contrasena", "cuenta", "transferencia"]
-    found_fin = [k for k in fin_keywords if k in haystack]
-    if found_fin:
-        score += min(15, 3 * len(found_fin))
-        reasons.append(f"palabras clave financieras: {', '.join(found_fin)}")
-
-    # 9. Añadir penalizacion si SPF/DKIM/DMARC fallan
-    if spf_fail:
-        score += 20
-        reasons.append("SPF fail (simulado)")
-    if dmarc_fail:
+    
+    phish_detections = 0
+    for pattern, peso, descripcion in phishing_patterns:
+        if re.search(pattern, haystack, re.IGNORECASE):
+            score += peso
+            reasons.append(f"patron phishing: {descripcion}")
+            reglas_aplicadas.append(f"PHISH_{descripcion.upper().replace(' ', '_')[:20]}")
+            phish_detections += 1
+            if phish_detections == 1:
+                categorias.append("phish")
+    
+    # ============================================================
+    # 4. DETECCION DE MALWARE
+    # ============================================================
+    malware_patterns = [
+        (r"(factura|invoice|receipt|orden|pedido|tracking).*\d+.*\.(zip|rar|7z|exe)", 40, "factura falsa con ejecutable"),
+        (r"(documento|document|file).*protegido.*macro", 35, "documento con macros"),
+        (r"macro.*(habilitad|enabled|activar|enable)", 38, "solicita habilitar macros"),
+        (r"(click|clic|abra|open).*(enable|habilitar|activar).*content", 32, "solicita habilitar contenido"),
+        (r"(descargu?e|download).*(urgente|importante|confidencial)", 28, "descarga urgente"),
+        (r"ejecutar como administrador|run as administrator", 42, "solicita permisos elevados"),
+    ]
+    
+    malware_detections = 0
+    for pattern, peso, descripcion in malware_patterns:
+        if re.search(pattern, haystack, re.IGNORECASE):
+            score += peso
+            reasons.append(f"patron malware: {descripcion}")
+            reglas_aplicadas.append(f"MALWARE_{descripcion.upper().replace(' ', '_')[:20]}")
+            malware_detections += 1
+            if malware_detections == 1:
+                categorias.append("malware")
+    
+    # Analisis de adjuntos maliciosos
+    if attachments:
+        for att in attachments:
+            filename = att.get("filename", "").lower()
+            size = att.get("size", 0)
+            ctype = att.get("content_type", "").lower()
+            
+            # Extensiones peligrosas
+            extensiones_peligrosas = [
+                (".exe", 50, "ejecutable Windows"),
+                (".scr", 48, "screensaver ejecutable"),
+                (".bat", 45, "batch script"),
+                (".cmd", 45, "command script"),
+                (".com", 48, "ejecutable DOS"),
+                (".pif", 47, "program information file"),
+                (".vbs", 42, "VBScript"),
+                (".js", 40, "JavaScript"),
+                (".jar", 38, "Java executable"),
+                (".hta", 45, "HTML application"),
+                (".ps1", 40, "PowerShell script"),
+                (".msi", 35, "Windows installer"),
+            ]
+            
+            for ext, peso, desc in extensiones_peligrosas:
+                if filename.endswith(ext):
+                    score += peso
+                    reasons.append(f"adjunto peligroso: {desc} ({filename})")
+                    reglas_aplicadas.append(f"ATTACH_{ext[1:].upper()}")
+                    if "malware" not in categorias:
+                        categorias.append("malware")
+            
+            # Doble extension sospechosa
+            if re.search(r"\.(pdf|doc|xls|txt|jpg|png)\.(exe|scr|bat|vbs|js)", filename):
+                score += 45
+                reasons.append(f"doble extension sospechosa: {filename}")
+                reglas_aplicadas.append("ATTACH_DOUBLE_EXT")
+                if "malware" not in categorias:
+                    categorias.append("malware")
+            
+            # Documentos Office con macros
+            if filename.endswith((".docm", ".xlsm", ".pptm", ".dotm", ".xltm")):
+                score += 32
+                reasons.append(f"documento Office con macros: {filename}")
+                reglas_aplicadas.append("ATTACH_OFFICE_MACRO")
+                if "malware" not in categorias:
+                    categorias.append("malware")
+            
+            # Archivos comprimidos sospechosos
+            if filename.endswith((".zip", ".rar", ".7z", ".tar", ".gz")):
+                if any(palabra in haystack for palabra in ["factura", "invoice", "pedido", "orden", "dhl", "fedex"]):
+                    score += 28
+                    reasons.append(f"archivo comprimido en contexto sospechoso: {filename}")
+                    reglas_aplicadas.append("ATTACH_ARCHIVE_SUSP")
+            
+            # Tamano anomalo
+            if size < 1024 and filename.endswith((".pdf", ".doc", ".xls")):
+                score += 18
+                reasons.append(f"documento sospechosamente pequeno: {filename} ({size} bytes)")
+                reglas_aplicadas.append("ATTACH_SIZE_ANOMALY")
+    
+    # ============================================================
+    # 5. DETECCION DE SPAM
+    # ============================================================
+    spam_patterns = [
+        (r"(viagra|cialis|levitra|pharmacy)", 30, "farmacia ilegal"),
+        (r"(casino|poker|ruleta|apuesta|lottery|loteria)", 28, "juego/apuestas"),
+        (r"(ganar dinero|make money|earn \$|trabajo desde casa)", 25, "esquema dinero facil"),
+        (r"(ampliar|agrandar|alargar).*(pene|miembro)", 35, "spam adulto"),
+        (r"(descuento|discount|oferta|deal).*(90%|80%|70%|gratis|free)", 22, "oferta excesiva"),
+        (r"(replica|imitacion).*(rolex|gucci|prada|louis vuitton)", 25, "productos falsificados"),
+        (r"(herencia|inheritance|millones de dolares|lottery winner)", 28, "estafa nigeriana"),
+        (r"(conozca|meet).*(mujeres|women|chicas|girls|singles)", 26, "spam citas"),
+        (r"(peso|weight).*(perder|lose|adelgaz)", 24, "dietas milagro"),
+    ]
+    
+    spam_detections = 0
+    for pattern, peso, descripcion in spam_patterns:
+        if re.search(pattern, haystack, re.IGNORECASE):
+            score += peso
+            reasons.append(f"patron spam: {descripcion}")
+            reglas_aplicadas.append(f"SPAM_{descripcion.upper().replace(' ', '_')[:20]}")
+            spam_detections += 1
+            if spam_detections == 1:
+                categorias.append("spam")
+    
+    # Indicadores adicionales de spam
+    if subject.count("!") >= 3:
+        score += 12
+        reasons.append(f"exceso de exclamaciones en asunto ({subject.count('!')})")
+        reglas_aplicadas.append("SPAM_EXCLAMATION")
+    
+    if subject.isupper() and len(subject) > 10:
         score += 15
-        reasons.append("DMARC fail (simulado)")
-    if dkim_fail:
+        reasons.append("asunto completamente en mayusculas")
+        reglas_aplicadas.append("SPAM_ALL_CAPS")
+    
+    if re.search(r"[\$€£]\s*\d+", subject):
         score += 10
-        reasons.append("DKIM fail (simulado)")
-
-    # 10. Asegurar rango 0-100 y determinar verdict
+        reasons.append("cantidades monetarias en asunto")
+        reglas_aplicadas.append("SPAM_MONEY_SUBJECT")
+    
+    # ============================================================
+    # 6. ANALISIS DE URLs
+    # ============================================================
+    if links:
+        for url in links[:10]:  # Analizar max 10 URLs
+            url_lower = url.lower()
+            
+            # IP directa en lugar de dominio
+            if re.search(r"https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", url):
+                score += 22
+                reasons.append("URL con IP directa (sin dominio)")
+                reglas_aplicadas.append("URL_IP_DIRECT")
+            
+            # Puerto no estandar
+            if re.search(r":\d{2,5}/", url) and ":80/" not in url and ":443/" not in url:
+                score += 18
+                reasons.append("URL con puerto no estandar")
+                reglas_aplicadas.append("URL_NONSTANDARD_PORT")
+            
+            # Usuario/password en URL
+            if "@" in url.split("/")[2] if len(url.split("/")) > 2 else False:
+                score += 28
+                reasons.append("URL con credenciales embebidas")
+                reglas_aplicadas.append("URL_EMBEDDED_CREDS")
+            
+            # Dominio sospechosamente largo
+            try:
+                domain_part = url.split("//")[1].split("/")[0]
+                if len(domain_part) > 50:
+                    score += 20
+                    reasons.append("dominio sospechosamente largo")
+                    reglas_aplicadas.append("URL_LONG_DOMAIN")
+            except:
+                pass
+        
+        # Exceso de URLs
+        if len(links) > 15:
+            score += min(25, len(links) - 15)
+            reasons.append(f"exceso de URLs ({len(links)})")
+            reglas_aplicadas.append("URL_EXCESSIVE")
+    
+    # ============================================================
+    # 7. ANOMALIAS DEL REMITENTE
+    # ============================================================
+    
+    # Display name vs dominio inconsistente
+    if "<" in sender and ">" in sender:
+        display_name = sender.split("<")[0].strip().lower()
+        email_part = sender.split("<")[1].split(">")[0].lower()
+        
+        # Nombre dice "banco" pero email no es del banco
+        instituciones = ["paypal", "amazon", "google", "microsoft", "apple", "facebook", 
+                        "banco", "santander", "bbva", "caixa", "hacienda"]
+        for inst in instituciones:
+            if inst in display_name and inst not in email_part:
+                score += 35
+                reasons.append(f"spoofing: nombre muestra '{inst}' pero dominio no coincide")
+                reglas_aplicadas.append("SENDER_SPOOFING")
+                if "phish" not in categorias:
+                    categorias.append("phish")
+                break
+    
+    # Dominio con guiones o numeros excesivos
+    if domain and (domain.count("-") >= 3 or len(re.findall(r"\d", domain)) >= 4):
+        score += 15
+        reasons.append("dominio con patron sospechoso")
+        reglas_aplicadas.append("SENDER_DOMAIN_PATTERN")
+    
+    # Dominio recien registrado (heuristica: TLDs baratos)
+    tlds_baratos = [".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".top", ".win", ".review"]
+    if any(domain.endswith(tld) for tld in tlds_baratos):
+        score += 20
+        reasons.append("TLD de alto riesgo")
+        reglas_aplicadas.append("SENDER_RISKY_TLD")
+    
+    # ============================================================
+    # 8. DETERMINAR ACCION Y VEREDICTO FINAL
+    # ============================================================
+    
+    # Normalizar score
     score = int(max(0, min(100, score)))
-
-    # Determinar verdict final segun score (igual que _verdict)
-    if score >= 70:
+    
+    # Determinar accion del gateway
+    if score >= 70 or "malware" in categorias:
+        accion = "block"
         verdict = "malicious"
-        if accion_simulada == "block":
-            reasons.append("umbral de bloqueo >= 70 cumplido")
-    elif score >= 40:
+        reasons.insert(0, f"BLOCK: score critico {score}/100")
+    elif score >= 40 or len(categorias) >= 2:
+        accion = "quarantine"
         verdict = "suspicious"
-        if accion_simulada == "quarantine":
-            reasons.append("umbral de cuarentena 40-69 cumplido")
+        reasons.insert(0, f"QUARANTINE: score sospechoso {score}/100")
     else:
-        verdict = "clean"
-        if accion_simulada == "deliver":
-            reasons.append("umbral de deliver < 40 cumplido")
-
-    # 11. Rasons finales consolidados
-    if not reasons:
-        reasons.append("seniales normales sin clasification especifica")
-    # Asegurar que siempre haya nota de modo simulado
-    if "KSMG simulado" not in " ".join(reasons):
-        reasons.append("KSMG simulado: analisis heuristico (sin gateway real)")
-
-    return score, reasons, evidence
+        accion = "deliver"
+        verdict = "clean" if score < 20 else "suspicious"
+        reasons.insert(0, f"DELIVER: score bajo {score}/100")
+    
+    # Construir evidencia
+    evidence["real"] = False  # Marca como simulado
+    evidence["fuente"] = "KSMG simulado (heuristico avanzado)"
+    evidence["accion"] = accion
+    evidence["categorias"] = list(set(categorias))
+    evidence["reglas"] = reglas_aplicadas[:15]  # Max 15 reglas
+    evidence["score_gateway"] = score
+    evidence["reliability"] = min(85, 60 + (len(reglas_aplicadas) * 2))  # Confiabilidad basada en reglas aplicadas
+    
+    # Asegurar que siempre se indique modo simulado
+    if not any("simulado" in str(r).lower() for r in reasons):
+        reasons.append("KSMG simulado: analisis heuristico avanzado (sin gateway real)")
+    
+    return score, reasons[:20], evidence  # Max 20 razones
 
 
 # -------------------------------------------------------------------- ClamAV
