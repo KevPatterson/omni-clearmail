@@ -212,6 +212,8 @@ def ingest_json(request: Request, payload: dict):
 @router.get("/ksmg/status")
 def ksmg_status(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return ksmg.status()
 
@@ -260,6 +262,8 @@ def ksmg_stop(cred: HTTPAuthorizationCredentials = Depends(bearer)):
 @router.get("/ksmg/events")
 def ksmg_events(limit: int = 50, cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return {"eventos": ksmg.list_events(limit=limit)}
 
@@ -268,6 +272,8 @@ def ksmg_events(limit: int = 50, cred: HTTPAuthorizationCredentials = Depends(be
 @router.get("/reporte-buzon/estado")
 def reporte_buzon_estado(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return reports.status()
 
@@ -276,6 +282,8 @@ def reporte_buzon_estado(cred: HTTPAuthorizationCredentials = Depends(bearer)):
 def reporte_buzon_ver(buzon: str = "*", days: int = None,
                       cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     try:
         return reports.build_report(buzon, days)
@@ -287,6 +295,8 @@ def reporte_buzon_ver(buzon: str = "*", days: int = None,
 def reporte_buzon_historial(limit: int = 50,
                             cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return {"enviados": reports.list_envios(limit=limit)}
 
@@ -420,6 +430,8 @@ def get_quarantine(request: Request, status: str = None, search: str = None,
 @router.get("/quarantine/summary")
 def quarantine_summary(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return quarantine.quarantine_summary()
 
@@ -456,6 +468,8 @@ def request_release(msg_id: str, cred: HTTPAuthorizationCredentials = Depends(be
 @router.get("/dashboard/overview")
 def dashboard_overview(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return dashboard_data.metrics_overview()
 
@@ -463,6 +477,8 @@ def dashboard_overview(cred: HTTPAuthorizationCredentials = Depends(bearer)):
 @router.get("/dashboard/department/{dept}")
 def dashboard_department(dept: str, cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return dashboard_data.department_view(dept)
 
@@ -477,6 +493,8 @@ def dashboard_user(username: str, cred: HTTPAuthorizationCredentials = Depends(b
 @router.get("/dashboard/engines")
 def dashboard_engines(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return dashboard_data.engine_coverage()
 
@@ -484,6 +502,8 @@ def dashboard_engines(cred: HTTPAuthorizationCredentials = Depends(bearer)):
 @router.get("/dashboard/license")
 def dashboard_license(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return dashboard_data.license_metrics()
 
@@ -494,6 +514,8 @@ def list_findings(severidad: str = None, tipo: str = None, status: str = None,
                   source: str = None, msg_id: str = None, search: str = None,
                   limit: int = 300, cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     rows = findings.list_findings(severidad=severidad, tipo=tipo, status=status,
                                   source=source, msg_id=msg_id, search=search, limit=limit)
@@ -503,6 +525,8 @@ def list_findings(severidad: str = None, tipo: str = None, status: str = None,
 @router.get("/findings/summary")
 def findings_summary(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return findings.findings_summary()
 
@@ -526,6 +550,8 @@ def list_addresses(direction: str = None, role: str = None, domain: str = None,
                    msg_id: str = None, limit: int = 500,
                    cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return {"registros": addressbook.list_addresses(
         direction=direction, role=role, domain=domain, verdict=verdict,
@@ -535,6 +561,8 @@ def list_addresses(direction: str = None, role: str = None, domain: str = None,
 @router.get("/addresses/summary")
 def addresses_summary(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return addressbook.address_summary()
 
@@ -561,6 +589,8 @@ def report_addresses_csv(direction: str = None, role: str = None, domain: str = 
                          verdict: str = None, search: str = None, internal: bool = None,
                          msg_id: str = None, cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return _csv_response(
         addressbook.build_csv(direction=direction, role=role, domain=domain,
@@ -574,6 +604,8 @@ def report_addresses_json(direction: str = None, role: str = None, domain: str =
                           verdict: str = None, search: str = None, internal: bool = None,
                           msg_id: str = None, cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return _json_file_response(
         addressbook.build_json(direction=direction, role=role, domain=domain,
@@ -587,6 +619,8 @@ def report_findings_csv(severidad: str = None, tipo: str = None, status: str = N
                         source: str = None, msg_id: str = None, search: str = None,
                         cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return _csv_response(
         findings.build_csv(severidad=severidad, tipo=tipo, status=status, source=source,
@@ -599,6 +633,8 @@ def report_findings_json(severidad: str = None, tipo: str = None, status: str = 
                          source: str = None, msg_id: str = None, search: str = None,
                          cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return _json_file_response(
         findings.build_json(severidad=severidad, tipo=tipo, status=status, source=source,
@@ -649,6 +685,8 @@ def metrics():
 @router.get("/licences/state")
 def licence_state(cred: HTTPAuthorizationCredentials = Depends(bearer)):
     _check_allowed()
+    if not cred:
+        raise HTTPException(401, "token requerido")
     _claims(cred)
     return licensing.license_state()
 
