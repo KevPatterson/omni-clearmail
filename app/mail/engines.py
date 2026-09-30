@@ -510,32 +510,71 @@ def _ksmg_simulado(msg: dict) -> tuple:
     # Normalizar score
     score = int(max(0, min(100, score)))
     
+    # Renombrar reglas a formato KSMG real
+    reglas_ksmg = []
+    for regla in reglas_aplicadas:
+        if regla.startswith("AUTH_"):
+            reglas_ksmg.append(f"KSMG_{regla}")
+        elif regla.startswith("PHISH_") or regla.startswith("MALWARE_") or regla.startswith("SPAM_") or regla.startswith("URL_") or regla.startswith("SENDER_") or regla.startswith("ATTACH_"):
+            reglas_ksmg.append(f"KSMG_{regla}")
+        elif regla == "DOMAIN_BLACKLIST":
+            reglas_ksmg.append("KSMG_BLACKLIST_DOMAIN")
+        else:
+            reglas_ksmg.append(f"KSMG_{regla}")
+    
     # Determinar accion del gateway
     if score >= 70 or "malware" in categorias:
         accion = "block"
         verdict = "malicious"
-        reasons.insert(0, f"BLOCK: score critico {score}/100")
+        reasons.insert(0, f"ACCION GATEWAY: BLOCK (score {score}/100)")
     elif score >= 40 or len(categorias) >= 2:
         accion = "quarantine"
         verdict = "suspicious"
-        reasons.insert(0, f"QUARANTINE: score sospechoso {score}/100")
+        reasons.insert(0, f"ACCION GATEWAY: QUARANTINE (score {score}/100)")
     else:
         accion = "deliver"
         verdict = "clean" if score < 20 else "suspicious"
-        reasons.insert(0, f"DELIVER: score bajo {score}/100")
+        reasons.insert(0, f"ACCION GATEWAY: DELIVER (score {score}/100)")
     
-    # Construir evidencia
+    # Construir cabeceras X-Kaspersky simuladas
+    cabeceras_ksmg = {
+        "x-kaspersky-anti-spam-action": accion.upper(),
+        "x-kaspersky-anti-spam-score": str(score),
+    }
+    
+    # Agregar categorias a cabeceras
+    if categorias:
+        cats_unicas = list(set(categorias))
+        cabeceras_ksmg["x-kaspersky-threats"] = ", ".join(cats_unicas)
+    
+    # Agregar reglas aplicadas a cabeceras
+    if reglas_ksmg:
+        cabeceras_ksmg["x-kaspersky-rules"] = "; ".join(reglas_ksmg[:10])
+    
+    # Agregar auth results a cabeceras
+    auth_results = []
+    if auth.get("spf"):
+        auth_results.append(f"spf={auth.get('spf')}")
+    if auth.get("dkim"):
+        auth_results.append(f"dkim={auth.get('dkim')}")
+    if auth.get("dmarc"):
+        auth_results.append(f"dmarc={auth.get('dmarc')}")
+    if auth_results:
+        cabeceras_ksmg["x-kaspersky-auth-results"] = "; ".join(auth_results)
+    
+    # Construir evidencia (formato identico a KSMG real)
     evidence["real"] = False  # Marca como simulado
-    evidence["fuente"] = "KSMG simulado (heuristico avanzado)"
+    evidence["fuente"] = "KSMG simulado (motor heuristico avanzado)"
     evidence["accion"] = accion
-    evidence["categorias"] = list(set(categorias))
-    evidence["reglas"] = reglas_aplicadas[:15]  # Max 15 reglas
+    evidence["categorias"] = list(set(categorias))  # phishing, malware, spam, clean
+    evidence["reglas"] = reglas_ksmg[:15]  # Max 15 reglas con prefijo KSMG_
     evidence["score_gateway"] = score
-    evidence["reliability"] = min(85, 60 + (len(reglas_aplicadas) * 2))  # Confiabilidad basada en reglas aplicadas
+    evidence["reliability"] = min(95, 60 + min(35, len(reglas_ksmg) * 2))  # Confiabilidad basada en reglas
+    evidence["cabeceras"] = cabeceras_ksmg  # Cabeceras X-Kaspersky simuladas
     
     # Asegurar que siempre se indique modo simulado
     if not any("simulado" in str(r).lower() for r in reasons):
-        reasons.append("KSMG simulado: analisis heuristico avanzado (sin gateway real)")
+        reasons.append("Motor KSMG simulado activo (sin gateway real conectado)")
     
     return score, reasons[:20], evidence  # Max 20 razones
 
